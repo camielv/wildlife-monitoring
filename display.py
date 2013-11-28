@@ -4,21 +4,24 @@ Created on Wed Nov 27 10:51:31 2013
 
 @author: verschoor
 """
-
+import cv
 import cv2
 import random
 import csv
 
-#def main(name = '../GOPRO/video/Flying/GOPR0809.MP4'):
-def main(name = 'videos/GOPR0809_start_0_27_end_1_55.mp4'):
-  capture = cv2.VideoCapture(name)
-  video = cv2.VideoWriter('video.avi', 1196444237, 60, (1920, 1080))
+def draw_annotations(video_name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', annotation_name = 'annotations/cow_809_1', output_name = '/output/video.avi'):
+  player = cv2.VideoCapture(video_name)
+  #recorder = cv2.VideoWriter(output_name, cv.CV_FOURCC('X', '2', '6', '4'), 60, (1920, 1080))
+#  recorder = cv2.VideoWriter(output_name, 1196444237, 60, (1920, 1080))
+  #if not recorder.isOpened():
+   # print "AASDSD"
+   # return
   
-  reader = csv.reader(open('annotations/cow_809_1.txt', 'rb'), delimiter=' ')
+  reader = csv.reader(open(annotation_name, 'rb'), delimiter=' ')
   annotations = dict()
   cow_ids = set()
   
-  # Dictionary Per frame and per cow
+  # Read in annotations per frame per cow.
   for row in reader:
     if int(row[5]) not in annotations:
       annotations[int(row[5])] = dict()
@@ -35,30 +38,37 @@ def main(name = 'videos/GOPR0809_start_0_27_end_1_55.mp4'):
     }
     cow_ids.add(int(row[0]))
   
+  # Generate random colours for the boxes
   colours = dict()
   for cow_id in cow_ids:
     colours[cow_id] = (random.randint(0,255), random.randint(0, 255), random.randint(0, 255))
 
   # Read first frame
-  ret, image = capture.read()
+  ret, image = player.read()
   frame_nr = 0
-  
   while(ret):
     print "Frame number: %d" % (frame_nr)
     cv2.putText(image, "Copyright 2013 Verschoor, do not use without permission!", (950, 1060), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-    cows = annotations[frame_nr]
-    for cow_id in cows:
-      cow = cows[cow_id]
-      if cow['lost'] != 1:
-        cv2.rectangle(image, (cow['xmin'], cow['ymin']), (cow['xmax'], cow['ymax']), colours[cow_id], 2)
-        cv2.putText(image, "Bertha " + str(cow_id), (cow['xmin'], cow['ymax'] + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
-    video.write(image)
-    #cv2.imshow('Feed', image)
-    #cv2.waitKey(1)
-    ret, image = capture.read()
+    if frame_nr in annotations:
+      cows = annotations[frame_nr]
+      for cow_id in cows:
+        cow = cows[cow_id]
+        if cow['lost'] != 1:
+          cv2.rectangle(image, (cow['xmin'], cow['ymin']), (cow['xmax'], cow['ymax']), colours[cow_id], 2)
+          cv2.putText(image, "Bertha " + str(cow_id), (cow['xmin'], cow['ymax'] + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+    #recorder.write(image)
+    cv2.imshow('Feed', image)
+    cv2.waitKey(1)
+    ret, image = player.read()
     frame_nr += 1
-    #break
-  video.release()
-  #cv2.destroyWindow("Feed")
 
-main()
+  #recorder.release()
+  cv2.destroyWindow("Feed")
+
+if __name__ == '__main__':
+  #draw_annotations(video_name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', annotation_name = 'annotations/cow_809_1.txt', output_name = '/output/cow_809_1.avi')
+  draw_annotations(video_name = 'videos/GOPR0809_start_2_09_end_2_27.mp4', annotation_name = 'annotations/cow_809_2.txt', output_name = '/output/cow_809_2.avi')
+  #draw_annotations(video_name = 'videos/GOPR0809_start_2_40_end_3_20.mp4', annotation_name = 'annotations/cow_809_3.txt', output_name = '/output/cow_809_3.avi')
+  #draw_annotations(video_name = 'videos/GOPR0809_start_5_05_end_6_11.mp4', annotation_name = 'annotations/cow_809_4.txt', output_name = '/output/cow_809_4.avi')
+  #draw_annotations(video_name = 'videos/GOPR0809_start_1_10_end_1_55.mp4', annotation_name = 'annotations/cow_810_1.txt', output_name = '/output/cow_810_1.avi')
+  #draw_annotations(video_name = 'videos/GOPR0809_start_2_30_end_3_20.mp4', annotation_name = 'annotations/cow_810_2.txt', output_name = '/output/cow_810_2.avi')
