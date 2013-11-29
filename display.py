@@ -71,9 +71,9 @@ def draw_annotations(video_name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', ann
   cv2.destroyWindow("Feed")
 
 if __name__ == '__main__':
-  draw_annotations(video_name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', annotation_name = 'annotations/cow_809_1.txt', output_name = 'output/cow_809_1.avi')
-  draw_annotations(video_name = 'videos/GOPR0809_start_2_09_end_2_27.mp4', annotation_name = 'annotations/cow_809_2.txt', output_name = 'output/cow_809_2.avi')
-  draw_annotations(video_name = 'videos/GOPR0809_start_2_40_end_3_20.mp4', annotation_name = 'annotations/cow_809_3.txt', output_name = 'output/cow_809_3.avi')
-  draw_annotations(video_name = 'videos/GOPR0809_start_5_05_end_6_11.mp4', annotation_name = 'annotations/cow_809_4.txt', output_name = 'output/cow_809_4.avi')
-  draw_annotations(video_name = 'videos/GOPR0810_start_1_10_end_1_55.mp4', annotation_name = 'annotations/cow_810_1.txt', output_name = 'output/cow_810_1.avi')
-  draw_annotations(video_name = 'videos/GOPR0810_start_2_30_end_3_20.mp4', annotation_name = 'annotations/cow_810_2.txt', output_name = 'output/cow_810_2.avi')
+  #draw_annotations(video_name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', annotation_name = 'annotations/cow_809_1.txt', output_name = 'output/cow_809_1.avi')
+  #draw_annotations(video_name = 'videos/GOPR0809_start_2_09_end_2_27.mp4', annotation_name = 'annotations/cow_809_2.txt', output_name = 'output/cow_809_2.avi')
+  #draw_annotations(video_name = 'videos/GOPR0809_start_2_40_end_3_20.mp4', annotation_name = 'annotations/cow_809_3.txt', output_name = 'output/cow_809_3.avi')
+  #draw_annotations(video_name = 'videos/GOPR0809_start_5_05_end_6_11.mp4', annotation_name = 'annotations/cow_809_4.txt', output_name = 'output/cow_809_4.avi')
+  #draw_annotations(video_name = 'videos/GOPR0810_start_1_10_end_1_55.mp4', annotation_name = 'annotations/cow_810_1.txt', output_name = 'output/cow_810_1.avi')
+  #draw_annotations(video_name = 'videos/GOPR0810_start_2_30_end_3_20.mp4', annotation_name = 'annotations/cow_810_2.txt', output_name = 'output/cow_810_2.avi')
