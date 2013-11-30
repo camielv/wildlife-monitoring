@@ -68,7 +68,7 @@ def draw_annotations(video_name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', ann
     frame_nr += 1
 
   recorder.release()
-    cv2.destroyWindow("Feed")
+  cv2.destroyWindow("Feed")
 
 if __name__ == '__main__':
   #draw_annotations(video_name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', annotation_name = 'annotations/cow_809_1.txt', output_name = 'output/cow_809_1.avi')
