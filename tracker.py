@@ -56,7 +56,7 @@ class Annotation():
     return return_string
 
 class Track():
-  
+  '''Class representing a point track'''
   def __init__(self, point, frame_nr):
     [[x, y]] = point
     self.X = [x]
@@ -68,6 +68,10 @@ class Track():
     self.X.append(x)
     self.Y.append(y)
     self.Z.append(frame_nr)
+    
+  def get_point(self, frame_nr):
+    index = self.Z.index(frame_nr)
+    return self.X[index], self.Y[index]
     
   def __str__(self):
     return_string =  str(self.X) + "\n"
@@ -96,8 +100,7 @@ def get_annotations(annotation_name):
   return annotations
 
 
-def create_point_tracks(name = 'videos/809_1/', start_frame = 0, max_track_length = 20, bounding_box = (0, 0, 1920, 1080)):
-  total = 5274 # Dirty fix
+def create_point_tracks(name, bounding_box, total, start_frame = 0, max_track_length = 20, draw = False):
   if start_frame > total - 1:
     return []
     
@@ -127,7 +130,8 @@ def create_point_tracks(name = 'videos/809_1/', start_frame = 0, max_track_lengt
       break
   
     #print "Features: %d Length: %d" % (len(features), track_length)
-    draw_features(image, features)
+    if draw:
+      draw_features(image, features)
     next_image = cv2.imread(name + (("image%.05d.jpg") % frame_nr))
 
     ### Feature Selection method: Forward-Backward Tracking (Optical flow)
@@ -156,17 +160,21 @@ def create_point_tracks(name = 'videos/809_1/', start_frame = 0, max_track_lengt
 
   return active_tracks
   
-def create_tracks():
-  annotations = get_annotations("annotations/cow_809_1.txt")
+def create_tracks(annotation_location = 'annotations/cow_809_1.txt', video_location = 'videos/809_1/', stepsize = 10):
+  '''Creates detection tracks hased on the stepsize'''
+  annotations = get_annotations(annotation_location)
   detections = list()
-  stepsize = 10
-  for frame_nr in xrange(100, 100+10*stepsize, stepsize):
+
+  reader = csv.reader(open(video_location + 'info.txt', 'rb'), delimiter=' ')
+  total_frames = int(reader.next()[1])
+  
+  for frame_nr in xrange(100, 100+5*stepsize, stepsize):
     for detection in detections:
       # Create point tracks within the detection box of stepsize
       if detection.alive and frame_nr-stepsize in detection.frames:
-        # Get latest bounding_box
+        # Get latest bounding_box and create tracks from there
         bounding_box = detection.bounding_box[frame_nr-stepsize]
-        tracks = create_point_tracks('videos/809_1/', frame_nr-stepsize, stepsize+1, bounding_box)
+        tracks = create_point_tracks(video_location, bounding_box, total_frames, frame_nr-stepsize, stepsize+1)
         if tracks:
           detections[detection.id].tracks[frame_nr] = tracks
         else:
@@ -186,8 +194,7 @@ def create_tracks():
           
           freq = 0
           for track in tracks:
-            x = track.X[stepsize]
-            y = track.Y[stepsize]
+            x, y = track.get_point(frame_nr)
             if x > bounding_box[0] and x < bounding_box[2] and y > bounding_box[1] and y < bounding_box[3]:
               freq += 1
           if freq > highest_freq:
@@ -217,11 +224,26 @@ def create_tracks():
     for frame_nr in detection.tracks:
       for track in detection.tracks[frame_nr]:
         ax.plot(track.X, track.Y, zs=track.Z, color=colour)
-  plt.show()
+  plt.show()  
 
-def create_images():
-  name = 'videos/GOPR0809_start_0_27_end_1_55.mp4'
-  output = 'videos/809_1/'
+
+def get_features(image):
+  '''Creates features using goodFeaturesToTrack'''
+  gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  
+  return cv2.goodFeaturesToTrack(gray_image, **feature_params)
+
+
+def draw_features(image, features):
+  '''Draws the features on the screen'''
+  if features is not None:
+    for x, y in features[:, 0]:
+      cv2.circle(image, (x,y), 2, (255, 0, 0), -1)
+  cv2.imshow('Features', image)
+  cv2.waitKey(1)
+
+
+def create_images(name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', output = 'videos/809_1/'):
+  '''Creates jpeg images of a video and a info file containing the amount of images'''
   capture = cv2.VideoCapture(name)
   
   frame_nr = 0
@@ -232,20 +254,10 @@ def create_images():
       break
     cv2.imwrite(output + ("image%.05d.jpg" % frame_nr), image)
     frame_nr += 1
-  
-  
+  writer = csv.writer(open(output + 'info.txt', 'wb'), delimiter =' ')
+  writer.writerow(["Frames:", frame_nr])
 
-def get_features(image):
-  gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  
-  return cv2.goodFeaturesToTrack(gray_image, **feature_params)
-  
-  
-def draw_features(image, features):
-  if features is not None:
-    for x, y in features[:, 0]:
-      cv2.circle(image, (x,y), 2, (255, 0, 0), -1)
-  cv2.imshow('Features', image)
-  cv2.waitKey(1)
   
 if __name__ == '__main__':
+  #create_images()
   create_tracks()
