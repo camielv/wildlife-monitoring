@@ -17,7 +17,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-feature_params = dict(maxCorners = 1000, qualityLevel = 0.01, minDistance = 10, blockSize = 19)
+feature_params = dict(maxCorners = 1000000, qualityLevel = 0.01, minDistance = 10, blockSize = 19)
 lk_params = dict(winSize  = (19, 19), maxLevel = 2, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
 class Detection():
@@ -71,7 +71,7 @@ class Track():
     
   def get_point(self, frame_nr):
     index = self.Z.index(frame_nr)
-    return self.X[index], self.Y[index]
+    return int(self.X[index]), int(self.Y[index])
     
   def __str__(self):
     return_string =  str(self.X) + "\n"
@@ -107,14 +107,14 @@ def create_point_tracks(name, bounding_box, total, start_frame = 0, max_track_le
   # Initialize with first frame and second frame.
   image = cv2.imread(name + (("image%.05d.jpg") % start_frame))
   
-  # Select features within bounding box
+  # Select features within bounding box if given
   sub_image = image[bounding_box[0]:bounding_box[2], bounding_box[1]:bounding_box[3]]
   features = get_features(sub_image)
-  
+
   if features == None:
     return []
 
-  # Transform features to big image
+  # Transform features to big image if bounding box
   for i in xrange(len(features)):
     features[i][0][0] = features[i][0][0]+bounding_box[0]
     features[i][0][1] = features[i][0][1]+bounding_box[1]
@@ -159,7 +159,8 @@ def create_point_tracks(name, bounding_box, total, start_frame = 0, max_track_le
     image = next_image.copy()
 
   return active_tracks
-  
+
+
 def create_tracks(annotation_location = 'annotations/cow_809_1.txt', video_location = 'videos/809_1/', stepsize = 10):
   '''Creates detection tracks hased on the stepsize'''
   annotations = get_annotations(annotation_location)
@@ -174,7 +175,7 @@ def create_tracks(annotation_location = 'annotations/cow_809_1.txt', video_locat
       if detection.alive and frame_nr-stepsize in detection.frames:
         # Get latest bounding_box and create tracks from there
         bounding_box = detection.bounding_box[frame_nr-stepsize]
-        tracks = create_point_tracks(video_location, bounding_box, total_frames, frame_nr-stepsize, stepsize+1)
+        tracks = create_point_tracks(video_location, bounding_box, total_frames, frame_nr-stepsize, stepsize+1, True)
         if tracks:
           detections[detection.id].tracks[frame_nr] = tracks
         else:
@@ -224,9 +225,104 @@ def create_tracks(annotation_location = 'annotations/cow_809_1.txt', video_locat
     for frame_nr in detection.tracks:
       for track in detection.tracks[frame_nr]:
         ax.plot(track.X, track.Y, zs=track.Z, color=colour)
-  plt.show()  
+  plt.show()
 
 
+def create_all_point_tracks(database, name, total, start_frame = 0, max_track_length = 20, draw = False):
+  if start_frame > total - 1:
+    return []
+    
+  # Initialize with first frame and second frame.
+  image = cv2.imread(name + (("image%.05d.jpg") % start_frame))
+  
+  # Select features within bounding box if given
+  features = get_features(image)
+
+  if features == None:
+    return []
+  
+  active_tracks = []
+  dead_tracks = []
+  correct_features = []
+  for row in xrange(len(features)):
+    point_track = Track(features[row], start_frame)
+    point = point_track.get_point(start_frame)
+    if point in database[start_frame]:
+      continue
+    
+    database[start_frame].append(point)
+    correct_features.append(features[row])
+    active_tracks.append(Track(features[row], start_frame))
+  
+  features = np.array(correct_features)  
+  
+  for frame_nr in xrange(start_frame + 1, min(start_frame + max_track_length, total)):
+    if len(features) == 0:
+      # Break if no features anymore
+      break
+  
+    #print "Features: %d Length: %d" % (len(features), track_length)
+    if draw:
+      draw_features(image, features)
+    next_image = cv2.imread(name + (("image%.05d.jpg") % frame_nr))
+
+    ### Feature Selection method: Forward-Backward Tracking (Optical flow)
+    # Forward in time
+    forward_features, st, err = cv2.calcOpticalFlowPyrLK(image, next_image, features, None, **lk_params)
+    # Backward in time
+    backward_features, st, err = cv2.calcOpticalFlowPyrLK(next_image, image, forward_features, None, **lk_params)
+    # Remove wrong matches
+    distance = abs(features - backward_features).reshape(-1, 2).max(-1)
+    matches = distance < 1
+    matched_features = []
+    new_active_tracks = []
+    
+    # Throw away all bad matches
+    for i in range(len(matches)):
+      if matches[i]:
+        matched_features.append(forward_features[i])
+        active_tracks[i].add_point(forward_features[i], frame_nr)
+        database[frame_nr].append(active_tracks[i].get_point(frame_nr))
+        new_active_tracks.append(active_tracks[i])
+      else:
+        dead_tracks.append(active_tracks[i])
+        
+    active_tracks = new_active_tracks
+    features = np.array(matched_features)
+    image = next_image.copy()
+    active_tracks.extend(dead_tracks)
+  return database, active_tracks
+  
+def create_all_tracks(video_location = 'videos/809_1/', track_length = 10):
+  reader = csv.reader(open(video_location + 'info.txt', 'rb'), delimiter=' ')
+  total_frames = int(reader.next()[1])
+  database = dict()
+  all_tracks = list()
+  
+  for frame_nr in xrange(total_frames):
+    database[frame_nr] = list()
+
+  for frame_nr in xrange(total_frames):
+    print "Frame %d" % frame_nr
+    database, tracks = create_all_point_tracks(database, video_location, total_frames, frame_nr, track_length)
+    all_tracks.extend(tracks)
+
+  '''
+  # Plot the point tracks
+  fig = plt.figure()
+  ax = Axes3D(fig)
+  ax.set_xlabel("x-axis")
+  ax.set_ylabel("y-axis")
+  ax.set_zlabel("time")
+  colours = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
+  for track in all_tracks:
+    colour = colours.pop()
+    colours.insert(0, colour)
+    if len(track.X) > 9:
+      ax.plot(track.X, track.Y, zs=track.Z, color=colour)
+  plt.show()
+  '''
+  
 def get_features(image):
   '''Creates features using goodFeaturesToTrack'''
   gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  
@@ -260,4 +356,5 @@ def create_images(name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', output = 'vi
   
 if __name__ == '__main__':
   #create_images()
-  create_tracks()
+  #create_all_tracks()
+  create_all_tracks()
