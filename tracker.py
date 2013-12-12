@@ -11,11 +11,13 @@ Created on Thu Aug 29 11:23:02 2013
 
 """
 
+import os
 import cv2
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from xml.dom.minidom import Document
 
 feature_params = dict(maxCorners = 1000000, qualityLevel = 0.01, minDistance = 10, blockSize = 19)
 lk_params = dict(winSize  = (19, 19), maxLevel = 2, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
@@ -105,7 +107,7 @@ def create_point_tracks(name, bounding_box, total, start_frame = 0, max_track_le
     return []
     
   # Initialize with first frame and second frame.
-  image = cv2.imread(name + (("image%.05d.jpg") % start_frame))
+  image = cv2.imread(name + (("/image%.05d.jpg") % start_frame))
   
   # Select features within bounding box if given
   sub_image = image[bounding_box[0]:bounding_box[2], bounding_box[1]:bounding_box[3]]
@@ -132,7 +134,7 @@ def create_point_tracks(name, bounding_box, total, start_frame = 0, max_track_le
     #print "Features: %d Length: %d" % (len(features), track_length)
     if draw:
       draw_features(image, features)
-    next_image = cv2.imread(name + (("image%.05d.jpg") % frame_nr))
+    next_image = cv2.imread(name + (("/image%.05d.jpg") % frame_nr))
 
     ### Feature Selection method: Forward-Backward Tracking (Optical flow)
     # Forward in time
@@ -159,14 +161,14 @@ def create_point_tracks(name, bounding_box, total, start_frame = 0, max_track_le
     image = next_image.copy()
 
   return active_tracks
+  
 
-
-def create_tracks(annotation_location = 'annotations/cow_809_1.txt', video_location = 'videos/809_1/', stepsize = 10):
+def create_tracks(annotation_location = 'annotations/cow_809_1.txt', video_location = 'videos/cow_809_1', stepsize = 10):
   '''Creates detection tracks hased on the stepsize'''
   annotations = get_annotations(annotation_location)
   detections = list()
 
-  reader = csv.reader(open(video_location + 'info.txt', 'rb'), delimiter=' ')
+  reader = csv.reader(open(video_location + '/info.txt', 'rb'), delimiter=' ')
   total_frames = int(reader.next()[1])
   
   for frame_nr in xrange(100, 100+5*stepsize, stepsize):
@@ -338,9 +340,14 @@ def draw_features(image, features):
   cv2.waitKey(1)
 
 
-def create_images(name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', output = 'videos/809_1/'):
+def create_images(video_location = 'videos/GOPR0809_start_0_27_end_1_55.mp4', output_location = 'videos/cow_809_1'):
   '''Creates jpeg images of a video and a info file containing the amount of images'''
-  capture = cv2.VideoCapture(name)
+  capture = cv2.VideoCapture(video_location)
+  try:
+    print "Output directory created."
+    os.mkdir(output_location)
+  except:
+    print "Ouput directory is already existing."
   
   frame_nr = 0
   while True:
@@ -348,13 +355,103 @@ def create_images(name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', output = 'vi
     ret, image = capture.read()
     if not ret:
       break
-    cv2.imwrite(output + ("image%.05d.jpg" % frame_nr), image)
+    cv2.imwrite(output_location + ("/image%.05d.jpg" % frame_nr), image)
     frame_nr += 1
-  writer = csv.writer(open(output + 'info.txt', 'wb'), delimiter =' ')
+
+  capture.close()
+  writer = csv.writer(open(output_location + '/info.txt', 'w'), delimiter =' ')
   writer.writerow(["Frames:", frame_nr])
 
+def create_voc_pascal_annotations(video_location = 'videos/GOPR0809_start_0_27_end_1_55.mp4', annotation_location = 'annotations/cow_809_1.txt', output_location = 'VOC_cow_809_1', database = 'The Verschoor 2013 Aerial Cow Database', annotator = 'Verschoor 2013'):
+  try:
+    print "Output directory created."
+    os.mkdir(output_location)
+  except:
+    print "Ouput directory is already existing. Please check or change output name"
+    #return
+
+  capture = cv2.VideoCapture(video_location)
+  VOC_image_location = output_location + '/JPEGimages'
+  VOC_annotation_location = output_location + '/Annotations'
+  #os.mkdir(VOC_image_location)
+  #os.mkdir(VOC_annotation_location)
+  
+  annotations = get_annotations(annotation_location)
+  
+  frame_nr = 0
+  while True:
+    print frame_nr
+    ret, image = capture.read()
+    
+    if not ret:
+      break
+    if len(annotations[frame_nr]) == 0:
+      frame_nr += 1
+      continue
+
+    height, width, depth = image.shape
+    
+    doc = Document()
+    annotation_xml = doc.createElement('annotation')
+    doc.appendChild(annotation_xml)
+    
+    annotation_folder = doc.createElement('folder')
+    folder_text = doc.createTextNode(output_location)
+    annotation_folder.appendChild(folder_text)
+    annotation_xml.appendChild(annotation_folder)
+    
+    annotation_filename = doc.createElement('filename')
+    filename_text = doc.createTextNode('%.06d.jpg' % frame_nr)
+    annotation_filename.appendChild(filename_text)
+    annotation_xml.appendChild(annotation_filename)
+    
+    annotation_source = doc.createElement('source')
+    annotation_xml.appendChild(annotation_source)    
+    
+    annotation_database = doc.createElement('database')
+    database_text = doc.createTextNode(database)
+    annotation_database.appendChild(database_text)
+    annotation_source.appendChild(annotation_database)
+    
+    annotation_annotation = doc.createElement('annotation')
+    annotation_text = doc.createTextNode(annotator)
+    annotation_annotation.appendChild(annotation_text)
+    annotation_source.appendChild(annotation_annotation)
+
+    annotation_owner = doc.createElement('owner')
+    annotation_xml.appendChild(annotation_owner)
+    
+    annotation_size = doc.createElement('size')
+    annotation_xml.appendChild(annotation_size)
+    
+    annotation_segmented = doc.createElement('segmented')
+    annotation_xml.appendChild(annotation_segmented)
+    
+    for id in annotations[frame_nr]:
+      # Create annotation
+      annotation = annotations[frame_nr][id]
+      annotation_object = doc.createElement('object')
+      annotation_xml.appendChild(annotation_object)
+      
+      annotation_object_name = doc.createElement('name')
+      object_text = doc.createTextNode(annotation.label)
+      annotation_object_name.appendChild(object_text)
+      annotation_object.appendChild(annotation_object_name)
+
+
+    print doc.toprettyxml()
+    return
+    
+    # Write image
+    #cv2.imwrite(VOC_image_location + ("/%.06d.jpg" % frame_nr), image)
+    
+    frame_nr += 1
+    
+    
   
 if __name__ == '__main__':
   #create_images()
   #create_all_tracks()
   create_all_tracks()
+  #create_tracks()
+  #create_voc_pascal_annotations()
