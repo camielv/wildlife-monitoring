@@ -160,7 +160,7 @@ def create_point_tracks(name, bounding_box, total, start_frame = 0, max_track_le
     features = np.array(matched_features)
     image = next_image.copy()
 
-  return active_tracks
+  return active_tracks, dead_tracks
   
 
 def create_tracks(annotation_location = 'annotations/cow_809_1.txt', video_location = 'videos/cow_809_1', stepsize = 10):
@@ -177,7 +177,7 @@ def create_tracks(annotation_location = 'annotations/cow_809_1.txt', video_locat
       if detection.alive and frame_nr-stepsize in detection.frames:
         # Get latest bounding_box and create tracks from there
         bounding_box = detection.bounding_box[frame_nr-stepsize]
-        tracks = create_point_tracks(video_location, bounding_box, total_frames, frame_nr-stepsize, stepsize+1, True)
+        active_tracks, dead_tracks = create_point_tracks(video_location, bounding_box, total_frames, frame_nr-stepsize, stepsize+1, True)
         if tracks:
           detections[detection.id].tracks[frame_nr] = tracks
         else:
@@ -228,6 +228,103 @@ def create_tracks(annotation_location = 'annotations/cow_809_1.txt', video_locat
       for track in detection.tracks[frame_nr]:
         ax.plot(track.X, track.Y, zs=track.Z, color=colour)
   plt.show()
+
+
+def track(annotation_location = 'annotations/cow_809_1.txt', video_location = 'videos/cow_809_1', stepsize = 10):
+  detections = get_annotations(annotation_location) # Detections of detector
+  active_detections = list() # Tracked detections
+  dead_detections = list() # Previously tracked detections
+  
+  reader = csv.reader(open(video_location + '/info.txt', 'rb'), delimiter=' ')
+  total_frames = int(reader.next()[1])
+  
+  for frame_nr in xrange(100, 100+5*stepsize, stepsize):
+    # Update detections to track based on the information provided by detector.    
+
+    # Compute scores of active_detection for every detection.
+    scores = compute_scores(detections, active_detections, frame_nr)
+    # Assign detection to active_detection or create new one and move all non corresponding detections to dead detections.
+    # Munkres?
+    
+    # Create tracks for detections_t
+    active_detections = new_create_point_tracks(video_location, active_detections, frame_nr, frame_nr + stepsize)
+    
+def new_create_point_tracks(name, detections, frame_nr, next_frame_nr):
+  '''Creates point tracks for every detection_t'''  
+  
+  # Initialize with first frame and second frame.
+  image = cv2.imread(name + (("/image%.05d.jpg") % frame_nr))
+  
+  if not detections:
+    return []
+  
+  # Select features within bounding box for all detections
+  features = None
+  num_features = []
+  
+  for i in xrange(len(detections)):
+    bounding_box = detections[i].bounding_box[frame_nr]
+    sub_image = image[bounding_box[0]:bounding_box[2], bounding_box[1]:bounding_box[3]]
+    fts = get_features(sub_image)
+    if features:
+      features = np.concatenate(features, fts)
+    else:
+      features = fts
+    num_features.append(len(fts))
+
+  if features == None:
+    return []
+
+  # Transform features to big image if bounding box
+  for i in xrange(len(features)):
+    features[i][0][0] = features[i][0][0]+bounding_box[0]
+    features[i][0][1] = features[i][0][1]+bounding_box[1]
+  
+  active_tracks = []
+  dead_tracks = []
+  for row in xrange(len(features)):
+    active_tracks.append(Track(features[row], start_frame))
+  
+  for frame_nr in xrange(start_frame + 1, min(start_frame + max_track_length, total)):
+    if len(features) == 0:
+      # Break if no features anymore
+      break
+  
+    #print "Features: %d Length: %d" % (len(features), track_length)
+    if draw:
+      draw_features(image, features)
+    next_image = cv2.imread(name + (("/image%.05d.jpg") % frame_nr))
+
+    ### Feature Selection method: Forward-Backward Tracking (Optical flow)
+    # Forward in time
+    forward_features, st, err = cv2.calcOpticalFlowPyrLK(image, next_image, features, None, **lk_params)
+    # Backward in time
+    backward_features, st, err = cv2.calcOpticalFlowPyrLK(next_image, image, forward_features, None, **lk_params)
+    # Remove wrong matches
+    distance = abs(features - backward_features).reshape(-1, 2).max(-1)
+    matches = distance < 1
+    matched_features = []
+    new_active_tracks = []
+    
+    # Throw away all bad matches
+    for i in range(len(matches)):
+      if matches[i]:
+        matched_features.append(forward_features[i])
+        active_tracks[i].add_point(forward_features[i], frame_nr)
+        new_active_tracks.append(active_tracks[i])
+      else:
+        dead_tracks.append(active_tracks[i])
+        
+    active_tracks = new_active_tracks
+    features = np.array(matched_features)
+    image = next_image.copy()
+
+  return detections_t
+  
+def compute_scores(detections, detections_t, frame_nr):
+  return False
+  
+
 
 
 def create_all_point_tracks(database, name, total, start_frame = 0, max_track_length = 20, draw = False):
@@ -452,6 +549,6 @@ def create_voc_pascal_annotations(video_location = 'videos/GOPR0809_start_0_27_e
 if __name__ == '__main__':
   #create_images()
   #create_all_tracks()
-  create_all_tracks()
-  #create_tracks()
+  #create_all_tracks()
+  track()
   #create_voc_pascal_annotations()
