@@ -1,0 +1,36 @@
+
+detections = List of detections (Bounding boxes)
+detections_t = List of detection that are tracked.
+
+for frame in frames:
+    # Loop over the frames with a stepsize.
+    
+    # Update the detections based on info provided by detector
+    for detection in detections:
+        # Loop over detections per frame.
+        tracked = False
+        for detection_t in detections_t:
+            # Check if detection belongs to a tracked detection
+            if detection == detection_t:
+                tracked = True
+                
+        if tracked:
+            update detection_t
+        else:
+            create new detection_t
+        
+        kill all detection_t that do not correspond to a detection
+    
+    # Create tracks to the next detection frame
+    detections_t = create_tracks(detections_t, frame_nr, next_frame_nr) 
+    
+    
+create_tracks(detections_t)
+    find features for all detections_t
+    track all features detections_t
+    perform epipolar geometry to dead features.
+    update detections_t
+    
+    return detections_t
+        
+        
