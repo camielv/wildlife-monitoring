@@ -465,13 +465,22 @@ def create_voc_pascal_annotations(video_location = 'videos/GOPR0809_start_0_27_e
     os.mkdir(output_location)
   except:
     print "Ouput directory is already existing. Please check or change output name"
-    #return
 
   capture = cv2.VideoCapture(video_location)
   VOC_image_location = output_location + '/JPEGimages'
   VOC_annotation_location = output_location + '/Annotations'
-  #os.mkdir(VOC_image_location)
-  #os.mkdir(VOC_annotation_location)
+  
+  try:
+    print "Image directory created."
+    os.mkdir(VOC_image_location)
+  except:
+    print "Image directory is already existing. Please check or change output name"
+
+  try:
+    print "Annotation directory created."
+    os.mkdir(VOC_annotation_location)
+  except:
+    print "Annotation directory is already existing. Please check or change output name"
   
   annotations = get_annotations(annotation_location)
   
@@ -489,66 +498,99 @@ def create_voc_pascal_annotations(video_location = 'videos/GOPR0809_start_0_27_e
     height, width, depth = image.shape
     
     doc = Document()
-    annotation_xml = doc.createElement('annotation')
+    annotation_xml = createElement('annotation')
     doc.appendChild(annotation_xml)
     
-    annotation_folder = doc.createElement('folder')
-    folder_text = doc.createTextNode(output_location)
-    annotation_folder.appendChild(folder_text)
+    annotation_folder = createElement('folder', output_location)
     annotation_xml.appendChild(annotation_folder)
     
-    annotation_filename = doc.createElement('filename')
-    filename_text = doc.createTextNode('%.06d.jpg' % frame_nr)
-    annotation_filename.appendChild(filename_text)
+    annotation_filename = createElement('filename', '%.06d.jpg' % frame_nr)
     annotation_xml.appendChild(annotation_filename)
     
-    annotation_source = doc.createElement('source')
-    annotation_xml.appendChild(annotation_source)    
+    annotation_source = createElement('source')
+    annotation_xml.appendChild(annotation_source)
     
-    annotation_database = doc.createElement('database')
-    database_text = doc.createTextNode(database)
-    annotation_database.appendChild(database_text)
-    annotation_source.appendChild(annotation_database)
+    source_database = createElement('database', database)
+    annotation_source.appendChild(source_database)
     
-    annotation_annotation = doc.createElement('annotation')
-    annotation_text = doc.createTextNode(annotator)
-    annotation_annotation.appendChild(annotation_text)
-    annotation_source.appendChild(annotation_annotation)
+    source_annotation = createElement('annotation', annotator)
+    annotation_source.appendChild(source_annotation)
 
-    annotation_owner = doc.createElement('owner')
+    annotation_owner = createElement('owner')
     annotation_xml.appendChild(annotation_owner)
     
-    annotation_size = doc.createElement('size')
+    owner_name = createElement('name', 'Camiel Verschoor')
+    annotation_owner.appendChild(owner_name)
+
+    annotation_size = createElement('size')
     annotation_xml.appendChild(annotation_size)
     
-    annotation_segmented = doc.createElement('segmented')
+    size_width = createElement('width', str(width))
+    annotation_size.appendChild(size_width)
+    
+    size_height = createElement('height', str(height))
+    annotation_size.appendChild(size_height)
+    
+    size_depth = createElement('depth', str(depth))
+    annotation_size.appendChild(size_depth)
+    
+    annotation_segmented = createElement('segmented', '0')
     annotation_xml.appendChild(annotation_segmented)
     
     for id in annotations[frame_nr]:
       # Create annotation
       annotation = annotations[frame_nr][id]
-      annotation_object = doc.createElement('object')
+      annotation_object = createElement('object')
       annotation_xml.appendChild(annotation_object)
       
-      annotation_object_name = doc.createElement('name')
-      object_text = doc.createTextNode(annotation.label)
-      annotation_object_name.appendChild(object_text)
+      annotation_object_name = createElement('name', annotation.label)
       annotation_object.appendChild(annotation_object_name)
 
+      annotation_object_pose = createElement('pose', 'Unspecified')
+      annotation_object.appendChild(annotation_object_pose)
+      
+      annotation_object_truncated = createElement('truncated', str(int(annotation.occluded)))
+      annotation_object.appendChild(annotation_object_truncated)
+      
+      annotation_object_difficult = createElement('difficult', '0')
+      annotation_object.appendChild(annotation_object_difficult)
+      
+      annotation_object_bndbox = createElement('bndbox')
+      annotation_object.appendChild(annotation_object_bndbox)
+      
+      annotation_object_xmin = createElement('xmin', str(annotation.bounding_box[0]))
+      annotation_object_bndbox.appendChild(annotation_object_xmin)
 
-    print doc.toprettyxml()
-    return
+      annotation_object_ymin = createElement('ymin', str(annotation.bounding_box[1]))
+      annotation_object_bndbox.appendChild(annotation_object_ymin)
+
+      annotation_object_xmax = createElement('xmax', str(annotation.bounding_box[2]))
+      annotation_object_bndbox.appendChild(annotation_object_xmax)
+
+      annotation_object_ymax = createElement('ymax', str(annotation.bounding_box[3]))
+      annotation_object_bndbox.appendChild(annotation_object_ymax)
+
+    xml_string = doc.toprettyxml()[23:]
     
+    f = open(VOC_annotation_location + '/%06d.xml' % frame_nr, 'w')
+    f.write(xml_string)
+    f.close()
+        
     # Write image
-    #cv2.imwrite(VOC_image_location + ("/%.06d.jpg" % frame_nr), image)
-    
+    cv2.imwrite(VOC_image_location + ("/%.06d.jpg" % frame_nr), image)
     frame_nr += 1
     
-    
-  
+def createElement(label, value=None):
+  doc = Document()
+  element = doc.createElement(label)
+  if value:
+    element.appendChild(doc.createTextNode(value))
+  return element
+
+
 if __name__ == '__main__':
   #create_images()
   #create_all_tracks()
   #create_all_tracks()
-  track()
-  #create_voc_pascal_annotations()
+  #track()
+  create_voc_pascal_annotations()
