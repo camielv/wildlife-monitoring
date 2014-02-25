@@ -403,7 +403,7 @@ def create_images(video_location = 'videos/GOPR0809_start_0_27_end_1_55.mp4', ou
   writer = csv.writer(open(output_location + '/info.txt', 'w'), delimiter =' ')
   writer.writerow(["Frames:", frame_nr])
 
-def create_voc_pascal_annotations(video_location = 'videos/GOPR0809_start_0_27_end_1_55.mp4', annotation_location = 'annotations/cow_809_1.txt', output_location = 'VOC_cow_809_1', database = 'The Verschoor 2013 Aerial Cow Database', annotator = 'Verschoor 2013'):
+def create_voc_pascal_annotations(video_location = 'videos/GOPR0809_start_0_27_end_1_55.mp4', annotation_location = 'annotations/cow_809_1.txt', output_location = 'VOC2007', database = 'The VOC2007 Database', annotator = 'PASCAL VOC2007'):
   try:
     print "Output directory created."
     os.mkdir(output_location)
@@ -428,17 +428,25 @@ def create_voc_pascal_annotations(video_location = 'videos/GOPR0809_start_0_27_e
   
   annotations = get_annotations(annotation_location)
   
+  
+  image_numbers = [13, 25, 211, 232, 273, 297, 306, 345, 360, 386, 408, 417, 432, 462, 464, 491, 504, 622, 725, 728, 767, 770, 786, 808, 827, 834, 880, 904, 986, 1073, 1100, 1103, 1120, 1130, 1143, 1182, 1299, 1312, 1442, 1468, 1471, 1508, 1589, 1614, 1641, 1697, 1713, 1716, 1741, 1764, 1806, 1917, 1974, 1987, 2005, 2021, 2088, 2092, 2115, 2126, 2152, 2173, 2237, 2299, 2300, 2313, 2314, 2323, 2326, 2369, 2387, 2494, 2505, 2576, 2623, 2634, 2669, 2676, 2695, 2749, 2763, 2770, 2789, 2794, 2818, 2868, 2903, 2940, 2978, 2991, 3030, 3068, 3105, 3201, 3215, 3288, 3354, 3394, 3410, 3411, 3439, 3633, 3640, 3750, 3840, 3841, 3887, 3982, 3994, 4022, 4023, 4081, 4141, 4181, 4200, 4233, 4332, 4368, 4375, 4399, 4441, 4445, 4474, 4500, 4537, 4571, 4585, 4608, 4635, 4686, 4741, 4772, 4775, 4826, 4901, 4980, 5017, 5036, 5063, 5080, 5114, 5124, 5141, 5326, 5335, 5339, 5404, 5418, 5514, 5547, 5617, 5653, 5711, 5728, 5797, 5841, 5843, 5876, 5981, 6021, 6060, 6073, 6085, 6095, 6111, 6148, 6170, 6173, 6177, 6202, 6291, 6316, 6378, 6404, 6414, 6562, 6573, 6579, 6589, 6591, 6612, 6708, 6711, 6761, 6770, 6841, 6881, 6935, 6973, 7008, 7044, 7045, 7069, 7072, 7075, 7118, 7153, 7158, 7215, 7380, 7389, 7452, 7516, 7528, 7554, 7599, 7602, 7772, 7786, 7851, 7939, 7979, 8000, 8005, 8078, 8081, 8090, 8111, 8189, 8202, 8208, 8299, 8304, 8342, 8345, 8358, 8418, 8475, 8527, 8605, 8607, 8615, 8636, 8706, 8722, 8758, 8763, 8853, 8863, 8927, 8973, 9082, 9113, 9133, 9170, 9189, 9223, 9245, 9264, 9301, 9308, 9400, 9429, 9450, 9463, 9545, 9586, 9650, 9710, 9717, 9760, 9768, 9771, 9865, 9897, 9908, 9909, 9912]  
+  
   frame_nr = 0
+  steps = 10
   while True:
     print frame_nr
-    ret, image = capture.read()
+    for i in range(steps):
+      ret, image = capture.read()
     
     if not ret:
       break
+    elif not image_numbers:
+      break
     if len(annotations[frame_nr]) == 0:
-      frame_nr += 1
+      frame_nr += steps
       continue
-
+    image_number = image_numbers.pop()    
+    
     height, width, depth = image.shape
     
     doc = Document()
@@ -448,7 +456,7 @@ def create_voc_pascal_annotations(video_location = 'videos/GOPR0809_start_0_27_e
     annotation_folder = createElement('folder', output_location)
     annotation_xml.appendChild(annotation_folder)
     
-    annotation_filename = createElement('filename', '%.06d.jpg' % frame_nr)
+    annotation_filename = createElement('filename', '%.06d.jpg' % image_number)
     annotation_xml.appendChild(annotation_filename)
     
     annotation_source = createElement('source')
@@ -487,7 +495,7 @@ def create_voc_pascal_annotations(video_location = 'videos/GOPR0809_start_0_27_e
       annotation_object = createElement('object')
       annotation_xml.appendChild(annotation_object)
       
-      annotation_object_name = createElement('name', annotation.label)
+      annotation_object_name = createElement('name', annotation.label.lower())
       annotation_object.appendChild(annotation_object_name)
 
       annotation_object_pose = createElement('pose', 'Unspecified')
@@ -515,14 +523,13 @@ def create_voc_pascal_annotations(video_location = 'videos/GOPR0809_start_0_27_e
       annotation_object_bndbox.appendChild(annotation_object_ymax)
 
     xml_string = doc.toprettyxml()[23:]
-    
-    f = open(VOC_annotation_location + '/%06d.xml' % frame_nr, 'w')
+    f = open(VOC_annotation_location + '/%06d.xml' % image_number, 'w')
     f.write(xml_string)
     f.close()
         
     # Write image
-    cv2.imwrite(VOC_image_location + ("/%.06d.jpg" % frame_nr), image)
-    frame_nr += 1
+    cv2.imwrite(VOC_image_location + ("/%.06d.jpg" % image_number), image)
+    frame_nr += steps
     
 def createElement(label, value=None):
   doc = Document()
