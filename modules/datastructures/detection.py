@@ -10,6 +10,8 @@ class Detection():
     
   def __str__(self):
     # Todo finish
-    return_string = "Alive: %d\n" % (int(self.alive))
-    return_string += "Frames: %s\n" % ("".join(" " + str(frame_id) for frame_id in self.frames))
+    return_string = "ID: %d\n" % self.id
+    return_string += "Alive: %d\n" % (int(self.alive))
+    return_string += "Frames:%s\n" % ("".join(" " + str(frame_id) for frame_id in self.frames))
+    return_string += "Bounding box: %s" % str(self.bounding_box)
     return return_string

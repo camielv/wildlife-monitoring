@@ -23,7 +23,7 @@ from modules.datastructures.annotation import Annotation
 from modules.datastructures.detection import Detection
 from modules.datastructures.track import Track
 
-feature_params = dict(maxCorners = 1000000, qualityLevel = 0.01, minDistance = 5, blockSize = 19)
+feature_params = dict(maxCorners = 100000, qualityLevel = 0.01, minDistance = 5, blockSize = 19)
 lk_params = dict(winSize  = (19, 19), maxLevel = 2, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 ID = 0
 
@@ -175,7 +175,7 @@ def create_tracks(annotation_location = 'annotations/cow_809_1.txt', video_locat
   plt.show()
 
 
-def track(annotation_location = 'annotations/cow_809_1.txt', video_location = 'videos/cow_809_1', stepsize = 10):
+def track(annotation_location = 'annotations/cow_809_1.txt', video_location = 'videos/cow_809_1', stepsize = 100):
   detections = get_annotations(annotation_location) # Detections of detector
   active_detections = list() # Tracked detections
   dead_detections = list() # Previously tracked detections
@@ -194,6 +194,12 @@ def track(annotation_location = 'annotations/cow_809_1.txt', video_location = 'v
     
 def new_create_point_tracks(name, detections, start_frame_nr, next_frame_nr):
   '''Creates point tracks for every detection_t'''  
+  # TODO tracking
+  # Features on whole screen homography doesnt work
+  # Homography per cow doesnt work (too noisy and few features)
+  # Using all the BBox features seems to work but will get unreliable in time.
+  # - Point tracks per bounding box versus global point tracking.
+  # - Homography gets unprecise when only using BB points. (Use more tracked points)
   
   # Initialize with first frame and second frame.
   image = cv2.imread(name + (("/image%.05d.jpg") % start_frame_nr))
@@ -207,9 +213,12 @@ def new_create_point_tracks(name, detections, start_frame_nr, next_frame_nr):
   num_features = []
   active_tracks = dict()
   dead_tracks = dict()
+  bb_pred = dict()
   
   for i in xrange(len(detections)):
     bounding_box = detections[i].bounding_box[start_frame_nr]
+    bb_pred[detections[i].id] = [bounding_box]
+    
     sub_image = image[bounding_box[0]:bounding_box[2], bounding_box[1]:bounding_box[3]]
     fts = get_features(sub_image)
     
@@ -230,6 +239,10 @@ def new_create_point_tracks(name, detections, start_frame_nr, next_frame_nr):
     else:
       features = np.vstack([features, fts])
     num_features.append(len(fts))
+    
+  #fts = get_features(image)
+  #features = np.vstack([features, fts])
+  
 
   # TODO EPIPOLAR MAGIC
   if features == None:
@@ -243,7 +256,13 @@ def new_create_point_tracks(name, detections, start_frame_nr, next_frame_nr):
   
     #print "Features: %d Length: %d" % (len(features), track_length)
     if draw:
-      draw_features(image, features)
+      drawimage = image.copy()
+      for i in bb_pred:
+        bbs = bb_pred[i]
+        bb = bbs[len(bbs)-1]
+        cv2.rectangle(drawimage, (bb[0], bb[1]), (bb[2], bb[3]), (255, 0, 0))
+        
+      draw_features(drawimage, features)
     next_image = cv2.imread(name + (("/image%.05d.jpg") % frame_nr))
 
     ### Feature Selection method: Forward-Backward Tracking (Optical flow)
@@ -255,35 +274,69 @@ def new_create_point_tracks(name, detections, start_frame_nr, next_frame_nr):
     distance = abs(features - backward_features).reshape(-1, 2).max(-1)
     matches = distance < 1
     matched_features = []
+    prev_features = []
     
     # Throw away all bad matches
-    iterator = 0    
+    iterator = 0
     for detection_id in active_tracks:
       tracks = active_tracks[detection_id]
       new_tracks = []
+      
       for track in tracks:
         if matches[iterator]:
+          prev_features.append(features[iterator])
           matched_features.append(forward_features[iterator])
           track.add_point(forward_features[iterator], frame_nr)
           new_tracks.append(track)
         else:
           dead_tracks[detection_id].append(track)
         iterator += 1
-      active_tracks[detection_id] = new_tracks
 
+      active_tracks[detection_id] = new_tracks
+    '''
+    # Extra features for homography doesnt work.
+    for i in xrange(iterator, len(matches)):
+      if matches[i]:
+        prev_features.append(features[i])
+        matched_features.append(forward_features[i])
+    '''
+    # Find homography
     features = np.array(matched_features)
+    prev_features = np.array(prev_features)
+    P, mask = cv2.findHomography(prev_features, features, cv2.RANSAC, 1)
+    
+    for detection in detections:
+      bbs = bb_pred[detection.id]
+      bb = bbs[len(bbs)-1]
+      min_xy = np.dot(P, np.array([bb[0], bb[1], 1]))
+      max_xy = np.dot(P, np.array([bb[2], bb[3], 1]))
+      bb_pred[detection.id].append((int(round(min_xy[0])), int(round(min_xy[1])), int(round(max_xy[0])), int(round(max_xy[1]))))
+    
     image = next_image.copy()
 
-
-  # Epipolar geometry
   '''
+  # Homography
   prev_features = []
   for detection_id in active_tracks:
     for track in active_tracks[detection_id]:
       prev_features.append([list(track.get_point(start_frame_nr))])
   prev_features = np.double(np.array(prev_features))
   features = np.double(features)
-  F, mask = cv2.findFundamentalMat(prev_features, features)
+  P, mask = cv2.findHomography(prev_features, features, cv2.RANSAC)
+  
+  # Test
+  cv2.destroyAllWindows()
+  image = cv2.imread(name + (("/image%.05d.jpg") % start_frame_nr))
+  for detection in detections:
+    BB = detection.bounding_box[start_frame_nr]
+    minimum = np.dot(P, np.array([BB[0],BB[1], 1]))
+    maximum = np.dot(P, np.array([BB[2],BB[3], 1]))
+    cv2.rectangle(image, (BB[0], BB[1]), (BB[2], BB[3]), (255, 0, 0))
+    cv2.rectangle(next_image, (int(minimum[0]), int(minimum[1])), (int(maximum[0]), int(maximum[1])), (255, 0, 0))
+  cv2.imshow('BB', image)
+  cv2.imshow('Next BB', next_image)
+  cv2.waitKey(100)
+  time.sleep(100)
   '''
   return detections
   
@@ -413,7 +466,7 @@ def draw_features(image, features):
     for x, y in features[:, 0]:
       cv2.circle(image, (x,y), 2, (255, 0, 0), -1)
   cv2.imshow('Features', image)
-  cv2.waitKey(100)
+  cv2.waitKey(1)
 
 
 def create_images(video_location = 'videos/GOPR0809_start_0_27_end_1_55.mp4', output_location = 'videos/cow_809_1'):
