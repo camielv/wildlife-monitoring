@@ -13,27 +13,16 @@ Creation
 --------
 
 
-Date: August 28, 2013
-
-Location: Voorsterweg 31, 8316 PR Marknesse, The Netherlands
-
-Pilot: Christian Muller
-
-Platform: Ascending Technologies Pelican
-
-Camera: GoPro HERO 3: Black edition
-
-Type: Video
-
-Quality: 1080p
-
-Field of view: Medium
-
-Frames per second: 60
-
-Mount: 3D printed made by Rob van Holstein.
-
-Optional: Preview camera
+- *Date:* August 28, 2013
+- *Location:* Voorsterweg 31, 8316 PR Marknesse, The Netherlands
+- *Pilot:* Christian Muller
+- *Platform:* Ascending Technologies Pelican
+- *Camera:* GoPro HERO 3: Black edition
+- *Type:* Video
+- *Quality:* 1080p
+- *Field of view:* Medium
+- *Frames per second:* 60
+- *Mount:* 3D printed made by Rob van Holstein.
 
 
 Annotation
