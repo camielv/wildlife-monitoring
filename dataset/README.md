@@ -5,8 +5,8 @@ Verschoor Aerial Cow Dataset
 ![Verschoor Aerial Cow Dataset](dataset.png "Verschoor Aerial Cow Dataset")
 
 This folder contains the Verschoor Cow Aerial dataset. It entails:
-- Makefile to download the videos.
-- Frame by frame annotations for the videos in videos.
+- The Makefile to download the videos.
+- Frame by frame annotations for the annotated videos.
 - The annotated videos.
 - The original videos.
 
@@ -50,6 +50,7 @@ Annotation
 
 
 - **Annotator:** Camiel R. Verschoor
+- **Comments:** Only parts of the videos were annotated.
 - **Tool:** [Video Annotation Tool from Irvine, California](http://web.mit.edu/vondrick/vatic/). Vatic is a free, online, interactive video annotation tool for computer vision research that crowdsources work to Amazon's Mechanical Turk. The tool makes it easy to build massive, affordable video data sets and can be deployed on a cloud. After three years of research, vatic is now used by labs around the world to annotate the next generation of data sets. The tool contains:
     - A web interface.
     - Interfacing for Mechanical Turk.
