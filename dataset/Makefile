@@ -11,10 +11,10 @@ original_videos/GOPR0809.mp4: original_videos.tar.gz
     touch original_videos/GOPR0809.MP4
 
 videos.tar.gz:
-    wget -c https://googledrive.com/host/0BxqEJ5Xwfi63SnlsVkloSVkzdk0 --no-check-certificate -O videos.tar.gz
+    wget -c https://googledrive.com/host/0B-1XujYg7VVXM3hJWjJhSFBkTHM --no-check-certificate -O videos.tar.gz
 
 original_videos.tar.gz:
-    wget -c https://googledrive.com/host/0BxqEJ5Xwfi63SnlsVkloSVkzdk0 --no-check-certificate -O original_videos.tar.gz
+    wget -c https://googledrive.com/host/0B-1XujYg7VVXM3hJWjJhSFBkTHM --no-check-certificate -O original_videos.tar.gz
 
 clean:
     rm videos.tar.gz original_videos.tar.gz
