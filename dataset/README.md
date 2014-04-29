@@ -89,31 +89,31 @@ Videos
         - **Start:** 2:30
         - **End:** 3:20
 - **original_videos:**
-        - COW809.MP4
-            - **Duration:** 6:48
-            - **Type of platform:** Multirotor
-            - **Field:** 1
-        - COW810.MP4
-            - **Duration:** 6:37
-            - **Type of platform:** Multirotor
-            - **Field:** 1
-        - COW811.MP4
-            - **Duration:** 8:40
-            - **Type of platform:** Multirotor
-            - **Field:** 1
-        - COW813.MP4
-            - **Duration:** 6:19
-            - **Type of platform:** Fixed-wing
-            - **Field:** 2
-        - COW814.MP4
-            - **Duration:** 4:57
-            - **Type of platform:** Fixed-wing
-            - **Field:** 2
-        - COW815.MP4
-            - **Duration:** 4:16
-            - **Type of platform:** Fixed-wing
-            - **Field:** 2
-        - COW816.MP4
-            - **Duration:** 9:31
-            - **Type of platform:** Multirotor
-            - **Field:** 2
+    - COW809.MP4
+        - **Duration:** 6:48
+        - **Type of platform:** Multirotor
+        - **Field:** 1
+    - COW810.MP4
+        - **Duration:** 6:37
+        - **Type of platform:** Multirotor
+        - **Field:** 1
+    - COW811.MP4
+        - **Duration:** 8:40
+        - **Type of platform:** Multirotor
+        - **Field:** 1
+    - COW813.MP4
+        - **Duration:** 6:19
+        - **Type of platform:** Fixed-wing
+        - **Field:** 2
+    - COW814.MP4
+        - **Duration:** 4:57
+        - **Type of platform:** Fixed-wing
+        - **Field:** 2
+    - COW815.MP4
+        - **Duration:** 4:16
+        - **Type of platform:** Fixed-wing
+        - **Field:** 2
+    - COW816.MP4
+        - **Duration:** 9:31
+        - **Type of platform:** Multirotor
+        - **Field:** 2
