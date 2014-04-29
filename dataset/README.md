@@ -20,7 +20,7 @@ Creation
 - *Camera:* GoPro HERO 3: Black edition
 - *Type:* Video
 - *Quality:* 1080p
-- *Field of view:* Medium
+- *Field of view:* Medium (Vertical: 55° Horizontal: 94.4°)
 - *Frames per second:* 60
 - *Mount:* 3D printed made by Rob van Holstein.
 
