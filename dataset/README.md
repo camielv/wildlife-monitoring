@@ -4,7 +4,7 @@ Verschoor Aerial Cow Dataset
 
 ![Verschoor Aerial Cow Dataset](dataset.png "Verschoor Aerial Cow Dataset")
 
-This folder contains the Verschoor Cow Aerial dataset. It entails:
+This folder contains the Verschoor Cow Aerial Dataset. It entails:
 - The Makefile to download the videos.
 - Frame by frame annotations for the annotated videos.
 - The annotated videos.
