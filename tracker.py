@@ -23,7 +23,7 @@ from modules.datastructures.annotation import Annotation
 from modules.datastructures.detection import Detection
 from modules.datastructures.track import Track
 
-feature_params = dict(maxCorners = 100000, qualityLevel = 0.01, minDistance = 5, blockSize = 19)
+feature_params = dict(maxCorners = 10000, qualityLevel = 0.01, minDistance = 5, blockSize = 19)
 lk_params = dict(winSize  = (19, 19), maxLevel = 2, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 ID = 0
 
@@ -183,7 +183,7 @@ def track(annotation_location = 'annotations/cow_809_1.txt', video_location = 'v
   reader = csv.reader(open(video_location + '/info.txt', 'rb'), delimiter=' ')
   total_frames = int(reader.next()[1])
   
-  for frame_nr in xrange(100, 100+5*stepsize, stepsize):
+  for frame_nr in xrange(500, 500+1*stepsize, stepsize):
     # Update detections to track based on the information provided by detector.
     active_detections = update_detections(detections, active_detections, frame_nr)
     
@@ -240,8 +240,8 @@ def new_create_point_tracks(name, detections, start_frame_nr, next_frame_nr):
       features = np.vstack([features, fts])
     num_features.append(len(fts))
     
-  #fts = get_features(image)
-  #features = np.vstack([features, fts])
+  fts = get_features(image)
+  features = np.vstack([features, fts])
   
 
   # TODO EPIPOLAR MAGIC
@@ -293,14 +293,16 @@ def new_create_point_tracks(name, detections, start_frame_nr, next_frame_nr):
         iterator += 1
 
       active_tracks[detection_id] = new_tracks
-    '''
+
     # Extra features for homography doesnt work.
     for i in xrange(iterator, len(matches)):
       if matches[i]:
         prev_features.append(features[i])
         matched_features.append(forward_features[i])
-    '''
+        
+
     # Find homography
+    # Vier punten
     features = np.array(matched_features)
     prev_features = np.array(prev_features)
     P, mask = cv2.findHomography(prev_features, features, cv2.RANSAC, 1)
@@ -308,9 +310,18 @@ def new_create_point_tracks(name, detections, start_frame_nr, next_frame_nr):
     for detection in detections:
       bbs = bb_pred[detection.id]
       bb = bbs[len(bbs)-1]
-      min_xy = np.dot(P, np.array([bb[0], bb[1], 1]))
-      max_xy = np.dot(P, np.array([bb[2], bb[3], 1]))
-      bb_pred[detection.id].append((int(round(min_xy[0])), int(round(min_xy[1])), int(round(max_xy[0])), int(round(max_xy[1]))))
+      
+      # 4 points of bounding box
+      pt1 = np.dot(P, np.array([bb[0], bb[1], 1]))
+      pt2 = np.dot(P, np.array([bb[0], bb[3], 1]))
+      pt3 = np.dot(P, np.array([bb[2], bb[1], 1]))
+      pt4 = np.dot(P, np.array([bb[2], bb[3], 1]))
+      # Find minima and maxima
+      min_x = int(round(min(pt1[0], pt2[0], pt3[0], pt4[0])))
+      max_x = int(round(max(pt1[0], pt2[0], pt3[0], pt4[0])))
+      min_y = int(round(min(pt1[1], pt2[1], pt3[1], pt4[1])))
+      max_y = int(round(max(pt1[1], pt2[1], pt3[1], pt4[1])))
+      bb_pred[detection.id].append((min_x, min_y, max_x, max_y))
     
     image = next_image.copy()
 
