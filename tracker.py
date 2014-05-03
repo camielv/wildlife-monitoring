@@ -469,7 +469,7 @@ def draw_features(image, features):
   cv2.waitKey(1)
 
 
-def create_images(video_location = 'videos/GOPR0809_start_0_27_end_1_55.mp4', output_location = 'videos/cow_809_1'):
+def create_images(video_location = '../videos/GOPR0809_start_0_27_end_1_55.mp4', output_location = '../videos/cow_809_1'):
   '''Creates jpeg images of a video and a info file containing the amount of images'''
   capture = cv2.VideoCapture(video_location)
   try:
@@ -484,10 +484,10 @@ def create_images(video_location = 'videos/GOPR0809_start_0_27_end_1_55.mp4', ou
     ret, image = capture.read()
     if not ret:
       break
-    cv2.imwrite(output_location + ("/image%.05d.jpg" % frame_nr), image)
+    cv2.imwrite(output_location + ("/%.06d.jpg" % frame_nr), image)
     frame_nr += 1
 
-  capture.close()
+  #capture.close()
   writer = csv.writer(open(output_location + '/info.txt', 'w'), delimiter =' ')
   writer.writerow(["Frames:", frame_nr])
 
@@ -628,8 +628,8 @@ def createElement(label, value=None):
 
 
 if __name__ == '__main__':
-  #create_images()
+  create_images()
   #create_all_tracks()
   #create_all_tracks()
-  track()
+  #track()
   #create_voc_pascal_annotations()
