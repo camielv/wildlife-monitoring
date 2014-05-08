@@ -25,6 +25,6 @@ class Detection():
     
   def __str__(self):
     return_string  = "Frame: %d\n" % self.frame_id
-    return_string += "Bounding box: %s\n" % self.bounding_box
+    return_string += "Bounding box: %s\n" % str(self.bounding_box)
     return_string += "Confidence: %f" % self.confidence
     return return_string
