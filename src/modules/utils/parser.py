@@ -13,11 +13,11 @@ class Parser():
   def __init__(self):
     pass
   
-  def vatic_parser(self, filepath):
+  def vatic_parser(self, file_path):
     ''' This function parses a vatic dump txt file and converts it to a 
     dictionary sorted by frame id and annotation id '''
   
-    annotations_file = csv.reader(open(filepath, 'rb'), delimiter=' ')
+    annotations_file = csv.reader(open(file_path, 'rb'), delimiter=' ')
     annotations = dict()
     
     for row in annotations_file:
@@ -30,11 +30,11 @@ class Parser():
   
     return annotations
     
-  def detection_parser(self, filepath):
+  def detection_parser(self, file_path):
     ''' This functions parses a dump created by the detector of Felzenswalb
     and converts it to a dictionary sort by frame id '''
   
-    detections_file = csv.reader(open(filepath, 'rb'), delimiter=' ')
+    detections_file = csv.reader(open(file_path, 'rb'), delimiter=' ')
     detections = dict()
     
     for row in detections_file:
