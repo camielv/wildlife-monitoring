@@ -49,7 +49,7 @@ class Visualizer():
           if not annotation.lost:
             (xmin, ymin, xmax, ymax) = annotation.bounding_box
             cv2.rectangle(image, (xmin, ymin), (xmax, ymax), colours[object_id], 2)
-      cv2.imshow('Feed', image)
+      cv2.imshow("Video", image)
       
       if record:
         recorder.write(image)
@@ -64,7 +64,7 @@ class Visualizer():
     if record:
       recorder.release()
     
-    cv2.destroyWindow("Feed")
+    cv2.destroyWindow("Video")
     
  
   def visualize_detections(self, video_file_path, detection_file_path):
