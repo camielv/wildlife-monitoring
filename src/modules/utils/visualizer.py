@@ -85,7 +85,7 @@ class Visualizer():
     frame_id = 0
     
     while(ret):
-      filename = '%s/%.06d.png' % (output_folder, frame_id)
+      filename = '%s/%.06d.jpg' % (output_folder, frame_id)
       cv2.imwrite(filename, rgb_frame)
             
       ret, rgb_frame = player.read()
