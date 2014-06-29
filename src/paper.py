@@ -1,5 +1,7 @@
 import cv2
+import threading
 import csv
+import os
 import numpy as np
 import cPickle as pickle
 from modules.datastructures.track import Track
@@ -7,25 +9,43 @@ from modules.datastructures.track import Track
 feature_params = dict(maxCorners = 10000000, qualityLevel = 0.01, minDistance = 5, blockSize = 19)
 lk_params = dict(winSize  = (19, 19), maxLevel = 2, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
-def get_point_tracks(name, steps):
-  reader = csv.reader(open(name + '/info.txt', 'rb'), delimiter=' ')
-  writer = csv.writer(open('TRACKS_COW810_1.txt', 'wb'), delimiter=' ')
+
+def multi_tracks(name, output_folder, steps, num_threads):
+  reader = csv.reader(open(name + '/info.txt', 'rb'), delimiter=' ')      
   total_frames = int(reader.next()[1])
-  
-  for i in range(total_frames):
+  size = int(round(total_frames/num_threads))
+  threads = []
+  for i in range(num_threads - 1):
+    threads.append(threading.Thread(target=get_point_tracks, args=[name, output_folder, steps, i*size, (i+1)*size]))
+  threads.append(threading.Thread(target=get_point_tracks, args=[name, output_folder, steps, (num_threads-1)*size, total_frames]))
+  print len(threads)
+  for thread in threads:
+    thread.start()
+    
+  for thread in threads:
+    thread.join()
+
+def get_point_tracks(name, output_folder, steps, start, end):
+  if os.path.isdir(output_folder):
+    print "Error: Output directory already exists"
+  else:
+    os.makedirs(output_folder)
+      
+  for i in range(start, end):
     print '###### Frame: %d ######' % i
-    tracks = create_point_tracks(name, i, min(i + steps, total_frames), False)
-    write_tracks(writer, tracks)
+    tracks = create_point_tracks(name, i, min(i + steps + 1, end), False)
+    output_name = output_folder + '/%d_%.06d.txt' % (steps, i)
+    write_tracks(output_name, tracks)
   
 
-def write_tracks(writer, tracks):
+def write_tracks(output_name, tracks):
+  writer = csv.writer(open(output_name, 'wb'), delimiter=' ')
   for track in tracks:
     writer.writerow(track.X)
     writer.writerow(track.Y)
     Z = track.Z
   writer.writerow(['###'])
   writer.writerow(Z)
-  writer.writerow(['###'])
 
 def create_point_tracks(name, start_frame_nr, next_frame_nr, draw = True):
   image = cv2.imread(name + (("/%.06d.jpg") % start_frame_nr))
@@ -44,7 +64,6 @@ def create_point_tracks(name, start_frame_nr, next_frame_nr, draw = True):
       # Break if no features anymore
       break
   
-    print "Features: %d Active Tracks: %d Dead Tracks: %d" % (len(features), len(active_tracks), len(dead_tracks))
     if draw:
       draw_image = image.copy()
       draw_features(draw_image, features)
@@ -75,7 +94,7 @@ def create_point_tracks(name, start_frame_nr, next_frame_nr, draw = True):
     active_tracks = new_tracks
     features = np.array(matched_features)
     image = next_image.copy()
-
+  print "Start: %d Features: %d Active Tracks: %d Dead Tracks: %d" % (start_frame_nr, len(features), len(active_tracks), len(dead_tracks))
   return active_tracks
 
 def get_features(image):
@@ -93,4 +112,9 @@ def draw_features(image, features):
   cv2.waitKey(1)
 
 if __name__ == '__main__':
-  get_point_tracks('../dataset/images/COW810_1', 15)
+  multi_tracks('../../videos/COW810_2', '../tracks/COW810_2', 5, 5)
+  multi_tracks('../../videos/COW810_2', '../tracks/COW810_2', 10, 5)
+  multi_tracks('../../videos/COW810_1', '../tracks/COW810_1', 35, 5)
+  multi_tracks('../../videos/COW810_2', '../tracks/COW810_2', 35, 5)
+  multi_tracks('../../videos/COW810_1', '../tracks/COW810_1', 40, 5)
+  multi_tracks('../../videos/COW810_2', '../tracks/COW810_2', 40, 5)
