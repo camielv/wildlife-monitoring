@@ -6,7 +6,40 @@ class TrackDetection():
     self.frames = [frame_id]
     self.tracks = dict()
     self.bounding_box = {frame_id: bounding_box}
+    self.virtual_bounding_box = dict()
     self.real_id = {frame_id: real_id}
+
+  def update_bounding_box(self):
+    frame_id = self.get_frame()
+    (xmin, ymin, xmax, ymax) = self.get_bounding_box()
+    
+    tracks = self.tracks[frame_id]
+    
+    if not tracks:
+      return False
+    
+    movement = [0, 0]
+    for track in tracks:
+      (x1, y1, frame_id) = track.get_first_point()
+      (x2, y2, frame_id) = track.get_last_point()
+      movement[0] += x2 - x1
+      movement[1] += y2 - y1
+
+    movement[0] = int(round(float(movement[0]) / len(tracks)))
+    movement[1] = int(round(float(movement[0]) / len(tracks)))
+    bounding_box = (xmin + movement[0], ymin + movement[1], xmax + movement[0], ymax + movement[1])
+
+    self.virtual_bounding_box[frame_id] = bounding_box
+    self.frames.append(frame_id)
+    
+    return True
+    
+  def get_bounding_box(self):
+    frame_id = self.get_frame()
+    if frame_id in self.bounding_box:
+      return self.bounding_box[frame_id]
+    else:
+      return self.virtual_bounding_box[frame_id]
     
   def add_detection(self, detection, real_id):
     self.frames.append(detection.frame_id)
@@ -15,7 +48,7 @@ class TrackDetection():
   
   def evaluate_point_track(self, track):
     (x, y, frame_id) = track.get_first_point()
-    (xmin, ymin, xmax, ymax) = self.bounding_box[frame_id]
+    (xmin, ymin, xmax, ymax) = self.get_bounding_box()
     if  x > xmin and x < xmax and y > ymin and y < ymax:
       if frame_id in self.tracks:
         self.tracks[frame_id].append(track)
