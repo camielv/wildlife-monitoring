@@ -8,6 +8,23 @@ class TrackDetection():
     self.bounding_box = {frame_id: bounding_box}
     self.real_id = {frame_id: real_id}
     
+  def add_detection(self, detection, real_id):
+    self.frames.append(detection.frame_id)
+    self.bounding_box[detection.frame_id] = detection.bounding_box
+    self.real_id[detection.frame_id] = real_id
+  
+  def evaluate_point_track(self, track):
+    (x, y, frame_id) = track.get_first_point()
+    (xmin, ymin, xmax, ymax) = self.bounding_box[frame_id]
+    if  x > xmin and x < xmax and y > ymin and y < ymax:
+      if frame_id in self.tracks:
+        self.tracks[frame_id].append(track)
+      else:
+        self.tracks[frame_id] = [track]
+  
+  def get_frame(self):
+    return self.frames[len(self.frames)-1]
+  
   def __str__(self):
     # Todo finish
     return_string = "ID: %d\n" % self.id
