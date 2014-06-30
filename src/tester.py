@@ -6,7 +6,7 @@ Created on Thu May  8 15:17:20 2014
 """
 
 from modules.utils.parser import Parser
-from modules.utils.visualizer import Visualizer
+#from modules.utils.visualizer import Visualizer
 
 
 
@@ -15,8 +15,10 @@ from modules.utils.visualizer import Visualizer
 #visualizer.visualize_annotations("../dataset/videos/COW809_1.MP4", "../dataset/annotations/COW809_1.txt", True)
 
 parser = Parser()
-annotations = parser.vatic_parser("../dataset/annotations/COW809_1.txt")
-print len(annotations)
+tracks = parser.track_parser("../tracks/5/5_000001.txt")
+annotations = parser.vatic_parser("../dataset/annotations/COW810_1.txt")
+print len(tracks)
+print tracks[0]
 #detections = parser.detection_parser("../detections/COW809_1_2.txt")
 #print len(detections)
 #for key in detections:

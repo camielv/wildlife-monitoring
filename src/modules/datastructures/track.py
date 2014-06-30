@@ -1,10 +1,13 @@
 class Track():
   '''Class representing a point track'''
-  def __init__(self, point, frame_nr):
-    [[x, y]] = point
-    self.X = [x]
-    self.Y = [y]
-    self.Z = [frame_nr]
+  def __init__(self, point = None, frame_nr = None, track = None):
+    if point is None:
+      [self.X, self.Y, self.Z] = track
+    else:
+      [[x, y]] = point
+      self.X = [x]
+      self.Y = [y]
+      self.Z = [frame_nr]
     
   def add_point(self, point, frame_nr):
     [[x, y]] = point

@@ -8,6 +8,7 @@ import csv
 
 from ..datastructures.annotation import Annotation
 from ..datastructures.detection import Detection
+from ..datastructures.track import Track
 
 class Parser():
   """This class contains various function to parse data"""
@@ -33,6 +34,7 @@ class Parser():
   
     return annotations
     
+
   def detection_parser(self, file_path):
     """This functions parses a dump created by the detector of Felzenswalb
     and converts it to a dictionary sort by frame id"""
@@ -48,3 +50,20 @@ class Parser():
       detections[int(row[0])].append(detection)
       
     return detections
+
+
+  def track_parser(self, file_path):
+    """This functions parses a dump txt file and converts it to a list of
+    tracks"""
+  
+    tracks_file = csv.reader(open(file_path, 'rb'), delimiter=' ')
+    tracks_list = list(tracks_file)
+    tracks = list()
+    
+    Z = map(float, tracks_list[len(tracks_list) - 1])
+    for i in range(0, len(tracks_list) - 2, 2):
+      X = map(float, tracks_list[i])
+      Y = map(float, tracks_list[i+1])
+      tracks.append(Track(track=[X,Y,Z]))
+
+    return tracks
