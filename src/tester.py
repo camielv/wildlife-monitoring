@@ -15,10 +15,12 @@ from modules.utils.parser import Parser
 #visualizer.visualize_annotations("../dataset/videos/COW809_1.MP4", "../dataset/annotations/COW809_1.txt", True)
 
 parser = Parser()
-tracks = parser.track_parser("../tracks/5/5_000001.txt")
+#tracks = parser.track_parser("../tracks/5/5_000001.txt")
 annotations = parser.vatic_parser("../dataset/annotations/COW810_1.txt")
-print len(tracks)
-print tracks[0]
+test = set()
+for id in annotations:
+  test = test.union(set(annotations[id].keys()))
+print len(test)
 #detections = parser.detection_parser("../detections/COW809_1_2.txt")
 #print len(detections)
 #for key in detections:

@@ -2,20 +2,37 @@ from modules.utils.parser import Parser
 from modules.utils.munkres import Munkres
 from modules.datastructures.detection import TrackDetection
 
+def count_point_tracks(detections, point_tracks):
+  if not point_tracks:
+    return []
+  
+  count = dict()
+  for id in detections:
+    count[id] = 0
+    (xmin, ymin, xmax, ymax) = detections[id].bounding_box
+    
+    for point_track in point_tracks:
+      (x, y, z) = point_track.get_last_point()
+      if x > xmin and x < xmax and y > ymin and y < ymax:
+        count[id] += 1
 
-def match_detections(tracks, detections, global_id):
+  return count
+
+
+def match_detections(tracks, detections, point_tracks, global_id):
   tracks_dead = list()
   tracks_new = list()
   if tracks:
     score = list()
     
+    count = count_point_tracks(detections, point_tracks)
+    
     # Compute score for every combination of Detection and TrackDetections.
     for id in detections:
-      track_scores = []     
+      track_scores = []
       for track in tracks:
-        track_scores.append(track.evaluate_detection(detections[id]))     
+        track_scores.append(track.evaluate_detection(detections[id], count[id]))
       score.append(track_scores)
-
     # Find TrackDetections that have a Detection that match both a certain threshold taken from Everingham et al. (Buffy paper).
     # Compute best decision with Hungarian Algorithm.
     munkres = Munkres()
@@ -39,13 +56,9 @@ def match_detections(tracks, detections, global_id):
     for id in remove:
       del tracks[id]
     
-    # Update TrackDetections without a corresponding detection by taking the average movement of optical flow.
+    # Remove TrackDetections with no corresponding detection.
     for track in tracks:
-      success = track.update_virtual_detection()
-      if success:
-        tracks_new.append(track)
-      else:
-        tracks_dead.append(track)
+      tracks_dead.append(track)
         
   # Create new TrackDetections for leftover detections  
   for id in detections:
@@ -86,11 +99,12 @@ annotations = parser.vatic_parser(annotations_file)
 # Tracks
 tracks_alive = list()
 tracks_dead = list()
+point_tracks = list()
 
 for i in range(0, frames, track_length):
   # Update TrackDetections with new detections.
   if i in annotations:
-    [tracks_alive, dead, global_id] = match_detections(tracks_alive, annotations[i], global_id)
+    [tracks_alive, dead, global_id] = match_detections(tracks_alive, annotations[i], point_tracks, global_id)
     tracks_dead.extend(dead)
   
   # Find point tracks for TrackDetection.
@@ -101,4 +115,4 @@ for i in range(0, frames, track_length):
     tracks_dead.extend(dead)
   
   print "Frame %d/%d" % (i, frames)
-print "Dead: %d Alive: %d All: %d" % (len(tracks_alive), len(tracks_dead), len(tracks_alive) + len(tracks_dead))
+print "Alive: %d Dead: %d All: %d" % (len(tracks_alive), len(tracks_dead), len(tracks_alive) + len(tracks_dead))
