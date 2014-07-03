@@ -2,15 +2,20 @@ import cv2
 import threading
 import csv
 import os
+import math
 import numpy as np
-import cPickle as pickle
 from modules.datastructures.track import Track
 
-feature_params = dict(maxCorners = 10000000, qualityLevel = 0.01, minDistance = 5, blockSize = 19)
+feature_params = dict(maxCorners = 10000000, qualityLevel = 0.01, minDistance = 2, blockSize = 19)
 lk_params = dict(winSize  = (19, 19), maxLevel = 2, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
 
 def multi_tracks(name, output_folder, steps, num_threads):
+  if os.path.isdir(output_folder):
+    print "Error: Output directory already exists"
+  else:
+    os.makedirs(output_folder)
+
   reader = csv.reader(open(name + '/info.txt', 'rb'), delimiter=' ')      
   total_frames = int(reader.next()[1])
   size = int(round(total_frames/num_threads))
@@ -18,7 +23,7 @@ def multi_tracks(name, output_folder, steps, num_threads):
   for i in range(num_threads - 1):
     threads.append(threading.Thread(target=get_point_tracks, args=[name, output_folder, steps, i*size, (i+1)*size]))
   threads.append(threading.Thread(target=get_point_tracks, args=[name, output_folder, steps, (num_threads-1)*size, total_frames]))
-  print len(threads)
+
   for thread in threads:
     thread.start()
     
@@ -30,8 +35,8 @@ def get_point_tracks(name, output_folder, steps, start, end):
     print "Error: Output directory already exists"
   else:
     os.makedirs(output_folder)
-      
-  for i in range(start, end):
+
+  for i in range(int(math.ceil(start/steps)) * steps, end, steps):
     print '###### Frame: %d ######' % i
     tracks = create_point_tracks(name, i, min(i + steps + 1, end), False)
     output_name = output_folder + '/%d_%.06d.txt' % (steps, i)
@@ -112,9 +117,11 @@ def draw_features(image, features):
   cv2.waitKey(1)
 
 if __name__ == '__main__':
-  multi_tracks('../../videos/COW810_2', '../tracks/COW810_2', 5, 5)
-  multi_tracks('../../videos/COW810_2', '../tracks/COW810_2', 10, 5)
-  multi_tracks('../../videos/COW810_1', '../tracks/COW810_1', 35, 5)
-  multi_tracks('../../videos/COW810_2', '../tracks/COW810_2', 35, 5)
-  multi_tracks('../../videos/COW810_1', '../tracks/COW810_1', 40, 5)
-  multi_tracks('../../videos/COW810_2', '../tracks/COW810_2', 40, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/5', 5, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/10', 10, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/15', 15, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/20', 20, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/25', 25, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/30', 30, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/35', 35, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/40', 40, 5)

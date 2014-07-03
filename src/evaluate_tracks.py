@@ -1,6 +1,8 @@
+import cPickle as pickle
 from modules.utils.parser import Parser
 from modules.utils.munkres import Munkres
 from modules.datastructures.detection import TrackDetection
+
 
 def count_point_tracks(detections, point_tracks):
   if not point_tracks:
@@ -85,34 +87,42 @@ def find_tracks(tracks, point_tracks):
   return [tracks_new, tracks_dead]
 
 
-# Settings
-global_id = 0
-video = 'COW810_1'
-track_length = 5
-frames = 2694
-
-# Parse annotation file
-parser = Parser()
-annotations_file = "../dataset/annotations/%s.txt" % video
-annotations = parser.vatic_parser(annotations_file)
-
-# Tracks
-tracks_alive = list()
-tracks_dead = list()
-point_tracks = list()
-
-for i in range(0, frames, track_length):
-  # Update TrackDetections with new detections.
-  if i in annotations:
-    [tracks_alive, dead, global_id] = match_detections(tracks_alive, annotations[i], point_tracks, global_id)
-    tracks_dead.extend(dead)
+def evaluate_tracks(video, frames, track_length):
+  # Settings
+  global_id = 0
   
-  # Find point tracks for TrackDetection.
-  if tracks_alive:
-    point_tracks_file = "../tracks/%s/%d/%d_%.06d.txt" % (video, track_length, track_length, i)
-    point_tracks = parser.track_parser(point_tracks_file)
-    [tracks_alive, dead] = find_tracks(tracks_alive, point_tracks)
-    tracks_dead.extend(dead)
+  # Parse annotation file
+  parser = Parser()
+  annotations_file = "../dataset/annotations/%s.txt" % video
+  annotations = parser.vatic_parser(annotations_file)
   
-  print "Frame %d/%d" % (i, frames)
-print "Alive: %d Dead: %d All: %d" % (len(tracks_alive), len(tracks_dead), len(tracks_alive) + len(tracks_dead))
+  # Tracks
+  tracks_location = "/media/verschoor/Barracuda3TB/tracks2"
+  tracks_alive = list()
+  tracks_dead = list()
+  point_tracks = list()
+  
+  for i in range(0, frames, track_length):
+    # Update TrackDetections with new detections.
+    if i in annotations:
+      [tracks_alive, dead, global_id] = match_detections(tracks_alive, annotations[i], point_tracks, global_id)
+      tracks_dead.extend(dead)
+    
+    # Find point tracks for TrackDetection.
+    if tracks_alive:
+      point_tracks_file = "%s/tracks/%s/%d/%d_%.06d.txt" % (tracks_location, video, track_length, track_length, i)
+      point_tracks = parser.track_parser(point_tracks_file)
+      [tracks_alive, dead] = find_tracks(tracks_alive, point_tracks)
+      tracks_dead.extend(dead)
+  
+    print "Frame %d/%d" % (i, frames)
+  print "Alive: %d Dead: %d All: %d" % (len(tracks_alive), len(tracks_dead), len(tracks_alive) + len(tracks_dead))
+  tracks_alive.extend(tracks_dead)
+  pickle.dump(tracks_alive, open("%s_%d.p" % (video, track_length), "wb"))
+
+if __name__ == '__main__':
+  parameters = {1: ('COW810_1', 2694), 2: ('COW810_2', 2989)}
+  for id in parameters:
+    (video, frames) = parameters[id]
+    for i in range(40, 4, -5):
+      evaluate_tracks(video, frames, i)
