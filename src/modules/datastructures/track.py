@@ -17,7 +17,7 @@ class Track():
     
   def get_point(self, frame_nr):
     index = self.Z.index(frame_nr)
-    return (int(round(self.X[index])), int(round(self.Y[index])))
+    return (int(round(self.X[index])), int(round(self.Y[index])), int(round(self.Z[index])))
 
   def get_last_point(self):
     index = len(self.X) - 1
