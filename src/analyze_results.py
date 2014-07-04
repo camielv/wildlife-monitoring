@@ -7,6 +7,8 @@ Created on Thu Jul  3 10:27:51 2014
 import matplotlib.pyplot as plt
 import cPickle as pickle
 import numpy as np
+from modules.utils.parser import Parser
+
 
 def count(tracks):
   counts = dict()
@@ -73,8 +75,8 @@ def pr_curve(tracks, track_length):
     
     for tube in tubes:
       total += 1
-      unique_ids = set(tube.real_id.values())
-      if len(unique_ids) > 1:
+      unique_ids = set(tube.ground_truth.values())
+      if len(unique_ids) > 1 or len(unique_ids) == 0:
         pr.append(float(count)/total)
         continue
       id = unique_ids.pop()
@@ -96,18 +98,6 @@ def pr_curve(tracks, track_length):
 
 
   '''
-Dus, in je gesorteerde lijst van tublets die loopt van 1..N.
-Dan, meet de precision hoeveel goeie je hebt op punt i in je lijst.
-Als de i=1 goed is, dan komt op plek 1 een 1/1
-Als de i=2 goed is, dan komt op plek 2 een 2/2
-Als de i=3 fout is, dan komt op plek 3 een 2/3
-Als de i=4 goed is, dan komt op plek 4 een 3/4
-... etc
-
-Dit geeft je een PR-curve.
-
-Dan blijven er twee vragen over:
-
 1- hoe sorteer je de lijst
 2- wat betekend 'goed/fout'
 
@@ -119,14 +109,48 @@ voor 2, heb je een aantal mogelijkheden dat een tubelet fout is:
 - je hebt de koe die bij deze tubelet hoort al een keer eerder in je gesorteerde lijst gezien
   '''
 
+def check_ground_truth(tubelets, annotation_location, video_location):
+  parser = Parser()
+  annotations_file = "%s/%s.txt" % (annotation_location, video_location)
+  annotations = parser.vatic_parser(annotations_file)
+  threshold = 0.5
+  for tubelet in tubelets:
+    ground_truth = dict()
+    bounding_boxes = tubelet.bounding_box
+    
+    for id in bounding_boxes:
+      (xminB, yminB, xmaxB, ymaxB) = bounding_boxes[id]
+      best_match = None
+      best_id = None
+      if id in annotations:
+        for annotation_id in annotations[id]:
+          (xminA, yminA, xmaxA, ymaxA) = annotations[id][annotation_id].bounding_box
+          intersection = max(0, min(xmaxA, xmaxB) - max(xminA, xminB)) * max(0, min(ymaxA, ymaxB) - max(yminA, yminB))
+          surface_A = (xmaxA - xminA) * (ymaxA - yminA)
+          surface_B = (xmaxB - xminB) * (ymaxB - yminB)
+          
+          union = surface_A + surface_B - intersection          
+          ratio = intersection / union
+                    
+          if ratio > threshold and ratio > best_match:
+            best_match = ratio
+            best_id = annotation_id
+            
+      if best_id != None:
+        ground_truth[id] = best_id
+    tubelet.ground_truth = ground_truth
+    
+  return tubelets
+  
 if __name__ == '__main__':
   parameters = {1: ('COW810_1', 2694), 2: ('COW810_2', 2989)}
   for id in parameters:
     (video, frames) = parameters[id]
     for i in range(5, 41, 5):
       name = "../count_results/%s_%d.p" % (video, i)
-      tracks = pickle.load(open(name, "rb"))
-      pr_curve(tracks, i)
+      tubelets = pickle.load(open(name, "rb"))
+      tubelets = check_ground_truth(tubelets, "../dataset/annotations", video)
+      pr_curve(tubelets, i)
       #doubles = count_doubles(tracks)
       #print '--- %d --- %s' % (i, video)
     plt.legend()

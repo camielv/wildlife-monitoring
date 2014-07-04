@@ -52,7 +52,7 @@ def match_detections(tubelets, detections, point_tracks_history, frame_id, globa
   # Create new tubelets for leftover detections
   for id in detections:
     detection = detections[id]
-    tubelets.append(TrackDetection(global_id, detection.frame_id, detection.bounding_box, id))
+    tubelets.append(TrackDetection(global_id, detection.frame_id, detection.bounding_box))
     global_id += 1
     
   return [tubelets, global_id]
@@ -78,15 +78,10 @@ def find_point_tracks(tubelets, point_tracks, frame_nr, point_track_length):
   return [tubelets_new, tubelets_dead]
 
 
-def evaluate_tubelets(video_location, annotation_location, point_tracks_location, frames, point_track_length, sample_rate):
+def evaluate_tubelets(video_location, output_location, point_tracks_location, detections, frames, point_track_length, sample_rate):
   # Settings
   global_id = 0
-  
-  # Parse annotation file
-  parser = Parser()
-  annotations_file = "%s/%s.txt" % (annotation_location, video_location)
-  annotations = parser.vatic_parser(annotations_file)
-  
+    
   # Point tracks
   point_tracks = list()
   point_tracks_history = dict()
@@ -116,13 +111,27 @@ def evaluate_tubelets(video_location, annotation_location, point_tracks_location
     print "Frame %d/%d Count: %d" % (frame_id, frames, len(tubelets_alive) + len(tubelets_dead))
   print "Alive: %d Dead: %d All: %d" % (len(tubelets_alive), len(tubelets_dead), len(tubelets_alive) + len(tubelets_dead))
   tubelets_alive.extend(tubelets_dead)
-  pickle.dump(tubelets_alive, open("%s_%d.p" % (video_location, point_track_length), "wb"))
+  pickle.dump(tubelets_alive, open("%s_%s_%d.p" % (output_location, video_location, point_track_length), "wb"))
 
 if __name__ == '__main__':
-  #parameters = {1: ('COW810_1', 2694), 2: ('COW810_2', 2989)}
-  parameters = {2: ('COW810_2', 2989)}
+  parameters = {1: ('COW810_1', 2694), 2: ('COW810_2', 2989)}
   sample_rate = 5
+  parser = Parser()  
+  annotation_location = "../dataset/annotations"
+  
   for id in parameters:
     (video_location, frames) = parameters[id]
+    annotations_file = "%s/%s.txt" % (annotation_location, video_location)
+    annotations = parser.vatic_parser(annotations_file)
     for i in range(5, 41, 5):
-      evaluate_tubelets(video_location, "../dataset/annotations", "/media/verschoor/Barracuda3TB", frames, i, sample_rate)
+      evaluate_tubelets(video_location, "annotations", "/media/verschoor/Barracuda3TB", annotations, frames, i, sample_rate)
+      
+  sample_rate = 1
+  detection_location = "../detections"
+  
+  for id in parameters:
+    (video_location, frames) = parameters[id]
+    detections_file = "%s/%s.txt" % (detection_location, video_location)
+    detections = parser.detection_parser(detections_file, -0.8)
+    for i in range(5, 41, 5):
+      evaluate_tubelets(video_location, "detections", "/media/verschoor/Barracuda3TB", detections, frames, i, sample_rate)

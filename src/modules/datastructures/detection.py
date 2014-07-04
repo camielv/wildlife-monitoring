@@ -1,13 +1,12 @@
 class TrackDetection():
   '''Class representing an tracked detection'''
-  def __init__(self, id, frame_id, bounding_box, real_id):
+  def __init__(self, id, frame_id, bounding_box):
     self.alive = True
     self.id = id
     self.frames = [frame_id]
     self.tracks = dict()
     self.bounding_box = {frame_id: bounding_box}
     self.virtual_bounding_box = dict()
-    self.real_id = {frame_id: real_id}
     
   def get_bounding_box(self):
     frame_id = self.get_last_frame()
