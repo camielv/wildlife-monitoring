@@ -103,7 +103,7 @@ def evaluate_tubelets(video_location, annotation_location, point_tracks_location
     # Find point tracks for Tubelets
     if tubelets_alive:
       point_tracks_file = "%s/tracks/%s/%d/%d_%.06d.txt" % (point_tracks_location, video_location, point_track_length, point_track_length, frame_id)
-      point_tracks = parser.track_parser(point_tracks_file)      
+      point_tracks = parser.track_parser(point_tracks_file)
       [tubelets_alive, dead] = find_point_tracks(tubelets_alive, point_tracks, frame_id, point_track_length)
       tubelets_dead.extend(dead)
       
@@ -119,9 +119,10 @@ def evaluate_tubelets(video_location, annotation_location, point_tracks_location
   pickle.dump(tubelets_alive, open("%s_%d.p" % (video_location, point_track_length), "wb"))
 
 if __name__ == '__main__':
-  parameters = {1: ('COW810_1', 2694), 2: ('COW810_2', 2989)}
+  #parameters = {1: ('COW810_1', 2694), 2: ('COW810_2', 2989)}
+  parameters = {2: ('COW810_2', 2989)}
   sample_rate = 5
   for id in parameters:
     (video_location, frames) = parameters[id]
     for i in range(5, 41, 5):
-      evaluate_tubelets(video_location, "../dataset/annotations", "..", frames, i, sample_rate)
+      evaluate_tubelets(video_location, "../dataset/annotations", "/media/verschoor/Barracuda3TB", frames, i, sample_rate)
