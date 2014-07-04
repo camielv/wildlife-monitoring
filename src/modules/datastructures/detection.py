@@ -56,16 +56,17 @@ class TrackDetection():
       else:
         self.tracks[frame_id] = [track]
   
-  def evaluate_detection(self, detection, count):
+  def evaluate_detection(self, detection, count, current_frame_id):
     score = 0
     (xmin, ymin, xmax, ymax) = detection.bounding_box
-    point_tracks = self.tracks[self.get_last_frame()]
+    track_frame_id = self.get_last_frame()
+    point_tracks = self.tracks[track_frame_id]
     
     for point_track in point_tracks:
-      (x, y, frame_id) = point_track.get_last_point()
+      (x, y, frame_id) = point_track.get_point(track_frame_id + (current_frame_id - track_frame_id))
       if x > xmin and x < xmax and y > ymin and y < ymax:
         score += 1
-    return 1 - (float(score) / (len(point_tracks) + (count - score)))
+    return 1 - (float(score) / (len(point_tracks) + (count[track_frame_id] - score)))
 
   def get_last_frame(self):
     return self.frames[len(self.frames)-1]
