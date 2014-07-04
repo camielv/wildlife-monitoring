@@ -35,7 +35,7 @@ class Parser():
     return annotations
     
 
-  def detection_parser(self, file_path):
+  def detection_parser(self, file_path, threshold = -1):
     """This functions parses a dump created by the detector of Felzenswalb
     and converts it to a dictionary sort by frame id"""
   
@@ -47,6 +47,8 @@ class Parser():
       
       if int(row[0]) not in detections:
         detections[int(row[0])] = list()
+      if int(row[5]) < threshold:
+        continue
       detections[int(row[0])].append(detection)
       
     return detections
