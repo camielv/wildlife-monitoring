@@ -129,7 +129,7 @@ def repair_point_tracks():
   for id in parameters:
     (video, frames) = parameters[id]
     video_location = '../../videos/%s' % video
-    for point_track_length in range(0, 41, 5):
+    for point_track_length in range(5, 41, 5):
       for frame_id in range(frames):
         point_tracks_file = "%s/tracks/%s/%d/%d_%.06d.txt" % (point_tracks_location, video, point_track_length, point_track_length, frame_id)
         point_tracks = parser.track_parser(point_tracks_file)
