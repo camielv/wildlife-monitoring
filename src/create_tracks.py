@@ -36,7 +36,7 @@ def get_point_tracks(name, output_folder, steps, start, end):
   else:
     os.makedirs(output_folder)
 
-  for i in range(int(math.ceil(start/steps)) * steps, end, steps):
+  for i in range(start, end):
     print '###### Frame: %d ######' % i
     tracks = create_point_tracks(name, i, min(i + steps + 1, end), False)
     output_name = output_folder + '/%d_%.06d.txt' % (steps, i)
@@ -117,11 +117,21 @@ def draw_features(image, features):
   cv2.waitKey(1)
 
 if __name__ == '__main__':
-  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/5', 5, 5)
-  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/10', 10, 5)
-  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/15', 15, 5)
-  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/20', 20, 5)
-  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/25', 25, 5)
-  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/30', 30, 5)
-  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/35', 35, 5)
-  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks2/tracks/COW810_2/40', 40, 5)
+  multi_tracks('../../videos/COW810_1', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_1/5', 5, 5)
+  multi_tracks('../../videos/COW810_1', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_1/10', 10, 5)
+  multi_tracks('../../videos/COW810_1', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_1/15', 15, 5)
+  multi_tracks('../../videos/COW810_1', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_1/20', 20, 5)
+  multi_tracks('../../videos/COW810_1', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_1/25', 25, 5)
+  multi_tracks('../../videos/COW810_1', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_1/30', 30, 5)
+  multi_tracks('../../videos/COW810_1', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_1/35', 35, 5)
+  multi_tracks('../../videos/COW810_1', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_1/40', 40, 5)
+
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_2/5', 5, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_2/10', 10, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_2/15', 15, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_2/20', 20, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_2/25', 25, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_2/30', 30, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_2/35', 35, 5)
+  multi_tracks('../../videos/COW810_2', '/media/verschoor/Barracuda3TB/tracks3/tracks/COW810_2/40', 40, 5)
+
