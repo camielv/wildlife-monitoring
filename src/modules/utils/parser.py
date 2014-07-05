@@ -38,18 +38,20 @@ class Parser():
   def detection_parser(self, file_path, threshold = -1):
     """This functions parses a dump created by the detector of Felzenswalb
     and converts it to a dictionary sort by frame id"""
-  
+    id = 0  
     detections_file = csv.reader(open(file_path, 'rb'), delimiter=' ')
     detections = dict()
     
     for row in detections_file:
       detection = Detection(row[0], (row[1], row[2], row[3], row[4]), row[5])
       
-      if int(row[0]) not in detections:
-        detections[int(row[0])] = list()
-      if int(row[5]) < threshold:
+      if float(row[5]) < threshold:
         continue
-      detections[int(row[0])].append(detection)
+      elif int(row[0]) not in detections:
+        detections[int(row[0])] = dict()
+
+      detections[int(row[0])][id] = detection
+      id += 1
       
     return detections
 

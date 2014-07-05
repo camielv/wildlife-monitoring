@@ -41,10 +41,9 @@ class TrackDetection():
     
     return True
     
-  def update_detection(self, detection, real_id):
+  def update_detection(self, detection):
     self.frames.append(detection.frame_id)
     self.bounding_box[detection.frame_id] = detection.bounding_box
-    self.real_id[detection.frame_id] = real_id
   
   def evaluate_point_track(self, track):
     (x, y, frame_id) = track.get_first_point()

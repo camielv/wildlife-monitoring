@@ -37,8 +37,18 @@ def match_detections(tubelets, detections, point_tracks_history, frame_id, globa
       score.append(tubelet_scores)
     # Find Tubelets that have a Detection that match both a certain threshold taken from Everingham et al. (Buffy paper).
     # Compute best decision with Hungarian Algorithm.
+    
     munkres = Munkres()
-    indices = munkres.compute(score)
+    #print score
+    try:
+      indices = munkres.compute(score)
+    except:
+      print len(tubelets)
+      print detections.keys()
+      print len(point_tracks_history)
+      print count
+      print score
+      print frame_id
     
     # Remove Detection that correspond to a Tubelet
     threshold = 0.5
@@ -46,7 +56,7 @@ def match_detections(tubelets, detections, point_tracks_history, frame_id, globa
     for detection_id, tubelet_id in indices:
       if score[detection_id][tubelet_id] < threshold:
         id = detection_ids[detection_id]
-        tubelets[tubelet_id].update_detection(detections[id], id)
+        tubelets[tubelet_id].update_detection(detections[id])
         del detections[id]
             
   # Create new tubelets for leftover detections
@@ -92,8 +102,8 @@ def evaluate_tubelets(video_location, output_location, point_tracks_location, de
   
   for frame_id in range(0, frames, sample_rate):
     # Update TrackDetections with new detections.
-    if frame_id in annotations:
-      [tubelets_alive, global_id] = match_detections(tubelets_alive, annotations[frame_id], point_tracks_history, frame_id, global_id)
+    if frame_id in detections:
+      [tubelets_alive, global_id] = match_detections(tubelets_alive, detections[frame_id], point_tracks_history, frame_id, global_id)
     
     # Find point tracks for Tubelets
     if tubelets_alive:
@@ -104,34 +114,40 @@ def evaluate_tubelets(video_location, output_location, point_tracks_location, de
       
       # Keep track of history
       point_tracks_history[frame_id] = point_tracks
-      if len(point_tracks_history) > point_track_length / sample_rate:
-        key = min(point_tracks_history.keys())
+
+    # Check if history is still up to date
+    for key in point_tracks_history.keys():
+      if key < frame_id + sample_rate - point_track_length:
         del point_tracks_history[key]
-  
-    print "Frame %d/%d Count: %d" % (frame_id, frames, len(tubelets_alive) + len(tubelets_dead))
+        
+    print "%s | %s | Frame %d/%d Count: %d" % (video_location, point_track_length, frame_id, frames, len(tubelets_alive) + len(tubelets_dead))
+    #print point_tracks_history.keys()
   print "Alive: %d Dead: %d All: %d" % (len(tubelets_alive), len(tubelets_dead), len(tubelets_alive) + len(tubelets_dead))
   tubelets_alive.extend(tubelets_dead)
   pickle.dump(tubelets_alive, open("%s_%s_%d.p" % (output_location, video_location, point_track_length), "wb"))
 
 if __name__ == '__main__':
   parameters = {1: ('COW810_1', 2694), 2: ('COW810_2', 2989)}
+  parser = Parser()
+  '''
   sample_rate = 5
-  parser = Parser()  
+
   annotation_location = "../dataset/annotations"
-  
   for id in parameters:
     (video_location, frames) = parameters[id]
-    annotations_file = "%s/%s.txt" % (annotation_location, video_location)
-    annotations = parser.vatic_parser(annotations_file)
-    for i in range(5, 41, 5):
-      evaluate_tubelets(video_location, "annotations", "/media/verschoor/Barracuda3TB", annotations, frames, i, sample_rate)
-      
+    for i in range(5, 21, 5):
+      annotations_file = "%s/%s.txt" % (annotation_location, video_location)
+      annotations = parser.vatic_parser(annotations_file, False)
+      evaluate_tubelets(video_location, "annotations_wo", "/media/verschoor/Barracuda3TB", annotations, frames, i, sample_rate)
+  '''
   sample_rate = 1
   detection_location = "../detections"
-  
+
   for id in parameters:
+    if id is 1:
+      continue
     (video_location, frames) = parameters[id]
     detections_file = "%s/%s.txt" % (detection_location, video_location)
-    detections = parser.detection_parser(detections_file, -0.8)
-    for i in range(5, 41, 5):
-      evaluate_tubelets(video_location, "detections", "/media/verschoor/Barracuda3TB", detections, frames, i, sample_rate)
+    for i in range(5, 6, 5):
+      detections = parser.detection_parser(detections_file, -0.8)
+      evaluate_tubelets(video_location, "detections_-0.8", "/media/verschoor/Barracuda3TB", detections, frames, i, sample_rate)
