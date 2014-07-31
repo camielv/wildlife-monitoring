@@ -29,10 +29,10 @@ def draw_detections(video_name = '../videos/GOPR0809_start_0_27_end_1_55.mp4', a
     if int(row[0]) not in detections:
         detections[int(row[0])] = []
     detections[int(row[0])].append({
-                  'xmin': int(row[1]),
-                  'ymin': int(row[2]),
-                  'xmax': int(row[3]),
-                  'ymax': int(row[4]),
+                  'xmin': int(round(float(row[1]))),
+                  'ymin': int(round(float(row[2]))),
+                  'xmax': int(round(float(row[3]))),
+                  'ymax': int(round(float(row[4]))),
                   'value': float(row[5])
     })
     
@@ -44,28 +44,22 @@ def draw_detections(video_name = '../videos/GOPR0809_start_0_27_end_1_55.mp4', a
     if frame_nr in detections:
       cows = detections[frame_nr]
       for cow in cows:
-        colour = (255, 255, 255)
-        if cow['value'] < -0.9:
-          colour = (255, 0, 0)
-        elif cow['value'] < -0.8:
-          colour = (0, 255, 0)
-        elif cow['value'] < -0.7:
-          colour = (0, 0, 255)
-        elif cow['value'] < -0.6:
-          colour = (255, 255, 0)
-        cv2.rectangle(image, (cow['xmin'], cow['ymin']), (cow['xmax'], cow['ymax']), colour, 2)
-        cv2.putText(image, "Value " + str(cow['value']), (cow['xmin'], cow['ymax'] + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+        colour = None
+        colour = (255, 0, 0)
+        if colour != None:
+          cv2.rectangle(image, (cow['xmin'], cow['ymin']), (cow['xmax'], cow['ymax']), colour, 2)
+          cv2.putText(image, "Value " + str(cow['value']), (cow['xmin'], cow['ymax'] + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
     recorder.write(image)
-    cv2.imshow('Feed', image)
-    cv2.waitKey(1)
+    #cv2.imshow('Feed', image)
+    #cv2.waitKey(100)
     ret, image = player.read()
     frame_nr += 1
   recorder.release()
   cv2.destroyWindow("Feed")
 
 if __name__ == '__main__':
-  draw_detections(video_name = '../../videos/COW810_1.MP4', annotation_name = '../detections/COW810_1.txt', output_name = 'COW810_1_D.avi')
-  draw_detections(video_name = '../../videos/COW810_2.MP4', annotation_name = '../detections/COW810_2.txt', output_name = 'COW810_2_D.avi')
+ # draw_detections(video_name = '../../videos/COW810_1.MP4', annotation_name = '../detections/COLOURDPM_COW810_1.txt', output_name = 'COLOURDPM_COW810_1.avi')
+  draw_detections(video_name = '../../videos/COW810_2.MP4', annotation_name = '../detections/COLOURDPM_COW810_2.txt', output_name = 'COLOURDPM_COW810_2.avi')
   #draw_annotations(video_name = 'videos/GOPR0809_start_0_27_end_1_55.mp4', annotation_name = 'annotations/cow_809_1.txt', output_name = 'output/cow_809_1.avi')
   #draw_annotations(video_name = 'videos/GOPR0809_start_2_09_end_2_27.mp4', annotation_name = 'annotations/cow_809_2.txt', output_name = 'output/cow_809_2.avi')
   #draw_annotations(video_name = 'videos/GOPR0809_start_2_40_end_3_20.mp4', annotation_name = 'annotations/cow_809_3.txt', output_name = 'output/cow_809_3.avi')

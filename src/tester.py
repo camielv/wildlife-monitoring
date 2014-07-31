@@ -11,6 +11,8 @@ import numpy
 from matplotlib.font_manager import FontProperties
 #from modules.utils.parser import Parser
 #from modules.utils.visualizer import Visualizer
+
+'''
 plt.yticks(numpy.arange(0, 1.01, 0.1))
 plt.xticks(numpy.arange(0, 1.01, 0.1))
 names = [("DPM", "dpm-precision.txt", "dpm-recall.txt"), ("Exemplar SVM", "esvm-precision.txt", "esvm-recall.txt"), ("Color DPM", "hogdpm-precision.txt", "hogdpm-recall.txt")]
@@ -38,7 +40,7 @@ plt.grid()
 plt.savefig("%s.pdf" % ("PR-CURVE-DETECTIONS"))
 plt.clf()
 
-'''
+
 #visualizer = Visualizer()
 #visualizer.video_to_images("../dataset/videos/COW809_1.MP4", "../dataset/images/COW809_1")
 #visualizer.visualize_annotations("../dataset/videos/COW809_1.MP4", "../dataset/annotations/COW809_1.txt", True)

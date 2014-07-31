@@ -87,6 +87,17 @@ def find_point_tracks(tubelets, point_tracks, frame_nr, point_track_length):
       
   return [tubelets_new, tubelets_dead]
 
+def filter_detections(detections):
+  ids = detections.keys()
+  if len(ids) < 20:
+    return detections
+  ids.sort()
+  ids.reverse()
+  filtered = dict()
+  for i in range(20):
+    filtered[ids[i]] = detections[i]
+  return filtered
+
 
 def evaluate_tubelets(video_location, output_location, point_tracks_location, detections, frames, point_track_length, sample_rate):
   # Settings
@@ -103,7 +114,8 @@ def evaluate_tubelets(video_location, output_location, point_tracks_location, de
   for frame_id in range(0, frames, sample_rate):
     # Update TrackDetections with new detections.
     if frame_id in detections:
-      [tubelets_alive, global_id] = match_detections(tubelets_alive, detections[frame_id], point_tracks_history, frame_id, global_id)
+      filtered = filter_detections(detections[frame_id])
+      [tubelets_alive, global_id] = match_detections(tubelets_alive, filtered, point_tracks_history, frame_id, global_id)
     
     # Find point tracks for Tubelets
     if tubelets_alive:
@@ -127,7 +139,7 @@ def evaluate_tubelets(video_location, output_location, point_tracks_location, de
   pickle.dump(tubelets_alive, open("%s_%s_%d.p" % (output_location, video_location, point_track_length), "wb"))
 
 if __name__ == '__main__':
-  parameters = {1: ('COW810_1', 2694), 2: ('COW810_2', 2989)}
+  parameters = {1: ('COW810_1', 2694)}
   parser = Parser()
   '''
   sample_rate = 5
@@ -142,12 +154,11 @@ if __name__ == '__main__':
   '''
   sample_rate = 1
   detection_location = "../detections"
+  detector = "COLOURDPM"
 
   for id in parameters:
-    if id is 1:
-      continue
     (video_location, frames) = parameters[id]
-    detections_file = "%s/%s.txt" % (detection_location, video_location)
-    for i in range(5, 6, 5):
+    detections_file = "%s/%s_%s.txt" % (detection_location, detector, video_location)
+    for i in range(15, 21, 5):
       detections = parser.detection_parser(detections_file, -0.8)
-      evaluate_tubelets(video_location, "detections_-0.8", "/media/verschoor/Barracuda3TB", detections, frames, i, sample_rate)
+      evaluate_tubelets(video_location, "%s_detections_-0.8" % (detector), "/media/verschoor/Barracuda3TB", detections, frames, i, sample_rate)

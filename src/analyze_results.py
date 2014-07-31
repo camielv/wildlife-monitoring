@@ -154,14 +154,14 @@ def check_ground_truth(tubelets, annotation_location, video_location):
   
 if __name__ == '__main__':
   parameters = {1: ('COW810_1', 2694), 2: ('COW810_2', 2989)}
- # parameters = {1: ('COW810_1', 2694)}
+  #parameters = {1: ('COW810_1', 2694)}
   for i in range(5, 21, 5):
     not_found = 0
     boxes = 0
     tubes = list()
     for id in parameters:
       (video, frames) = parameters[id]
-      name = "../count_results/%s_%s_%d.p" % ("detections_-0.7", video, i)
+      name = "../count_results/%s_%s_%d.p" % ("detections_-0.8", video, i)
       tubelets = pickle.load(open(name, "rb"))
       print len(tubelets)
       (cows_not_found, pipo, tubelets) = check_ground_truth(tubelets, "../dataset/annotations", video)
@@ -177,7 +177,7 @@ if __name__ == '__main__':
   plt.xticks(np.arange(0, 1.01, 0.1))
   plt.legend(prop=fontP)
   plt.grid()
-  plt.savefig("%s.pdf" % ("detections_-0.7"))
+  plt.savefig("%s.pdf" % ("detections_-0.8"))
   plt.clf()
       #doubles = count_doubles(tracks)
       #print '--- %d --- %s' % (i, video)
